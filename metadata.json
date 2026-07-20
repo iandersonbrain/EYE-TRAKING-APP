@@ -1,0 +1,6 @@
+{
+  "name": "Plataforma de Eye-Tracking y Análisis Cognitivo",
+  "description": "Plataforma unificada que combina la velocidad de la IA predictiva, el eye-tracking por webcam de usuarios reales y la Emotion AI para un análisis cognitivo de 360°.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
