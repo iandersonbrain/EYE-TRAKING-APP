@@ -6,7 +6,7 @@
 import React, { useState, useRef } from "react";
 import { Campaign } from "../types";
 import { campaignPresets } from "../campaignPresets";
-import { Plus, Image as ImageIcon, Trash2, Calendar, FileText, ChevronRight, UploadCloud, Cpu, AlertCircle } from "lucide-react";
+import { Plus, Image as ImageIcon, Trash2, Calendar, FileText, ChevronRight, UploadCloud, Cpu, AlertCircle, Frame, Megaphone, ShoppingCart, Package, Globe, Smartphone, Video, Sparkles } from "lucide-react";
 
 interface CampaignsListProps {
   campaigns: Campaign[];
@@ -16,6 +16,7 @@ interface CampaignsListProps {
   onDeleteCampaign: (id: string) => void;
   onAnalyzeCampaign: (id: string, campaignData?: Campaign) => Promise<void>;
   isAnalyzing: boolean;
+  onNavigateTab?: (tab: "list" | "predictive" | "webcam" | "emotions" | "dashboard360" | "logoReview") => void;
 }
 
 export default function CampaignsList({
@@ -25,9 +26,31 @@ export default function CampaignsList({
   onAddCampaign,
   onDeleteCampaign,
   onAnalyzeCampaign,
-  isAnalyzing
+  isAnalyzing,
+  onNavigateTab
 }: CampaignsListProps) {
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
+
+  const handleSelectToolCategory = (category: string) => {
+    if (category === "logoReview") {
+      if (onNavigateTab) {
+        onNavigateTab("logoReview");
+      }
+      return;
+    }
+
+    setNewCampaign(prev => ({ ...prev, category }));
+    setShowAddForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleFilterCategory = (category: string) => {
+    setSelectedCategory(category);
+    const element = document.getElementById("studies-grid");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
   const [newCampaign, setNewCampaign] = useState({ name: "", description: "", category: "keyvisual" });
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -725,8 +748,288 @@ export default function CampaignsList({
         </form>
       )}
 
+      {/* Featured Tools Showcase Banner & Grid on Landing */}
+      {!showAddForm && (
+        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-800/80 pb-6">
+              <div>
+                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-[10px] font-mono font-bold tracking-wider uppercase mb-2">
+                  <Sparkles className="w-3 h-3 text-indigo-400" />
+                  <span>Especialidades de Neuromarketing Predictivo</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black font-display tracking-tight text-white leading-tight">
+                  Herramientas de Análisis de Atención Visual
+                </h3>
+                <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+                  Selecciona la herramienta especializada según el tipo de formato publicitario o interfaz para evaluar la jerarquía cognitiva de tu diseño.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2 shrink-0">
+                <button
+                  onClick={() => handleSelectToolCategory("keyvisual")}
+                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-rose-600/25 flex items-center gap-2 group"
+                >
+                  <Frame className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+                  <span>Crear Cartel / Póster</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Grid of Specialized Tool Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+              
+              {/* Card 1: CARTELES Y POSTERS (DESTACADA) */}
+              <div className="bg-slate-800/90 hover:bg-slate-800 border-2 border-rose-500/80 hover:border-rose-400 rounded-2xl p-5 transition flex flex-col justify-between shadow-xl relative group">
+                <div className="absolute -top-3 right-4 bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-md font-mono flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  HERRAMIENTA DESTACADA
+                </div>
+
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-rose-500/20 border border-rose-400/40 text-rose-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Frame className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm flex items-center gap-1.5">
+                    Carteles, Pósters & Keyvisuals
+                  </h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Optimiza el impacto en vía pública, impresos y vallas urbanas. Mide fijaciones foveales a 3s, legibilidad a distancia y reconocimiento de marca.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("keyvisual")}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Cartel / Póster
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("keyvisual")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de carteles"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 2: Banners & Ads Digitales */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Megaphone className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Banners & Ads Digitales</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Evalúa anuncios para Google Display, Meta Ads y e-Commerce para maximizar el CTR y mitigar la ceguera publicitaria.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("banner")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-indigo-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Banner
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("banner")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de banners"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 3: Estantes & Góndolas */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 mb-3 group-hover:scale-105 transition-transform">
+                    <ShoppingCart className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Góndolas & Planogramas</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Mide la atracción en la zona a la altura de ojos en supermercados y compara la prominencia contra competidores.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("supermarket")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Góndola
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("supermarket")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de góndola"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 4: Empaques & Packaging */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Package className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Empaques & Packaging</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Audita el contraste cromático de etiquetas, la visibilidad del logotipo de marca y la ergonomía visual de empaques.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("packaging")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Empaque
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("packaging")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de empaques"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 5: Páginas Web & Landings */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-blue-500/20 border border-blue-400/30 text-blue-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Globe className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Webs & Landing Pages</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Optimiza la conversión web midiendo la atención en el héroe principal, botones CTA, testimonios y precios.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("landing")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Web
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("landing")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios web"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 6: Mobile Apps UX */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-purple-500/20 border border-purple-400/30 text-purple-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Smartphone className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Interfaces App Móvil</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Analiza la carga cognitiva y claridad en apps móviles, verificando saldos, alertas y flujos de navegación.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("fintech")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-purple-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar App UX
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("fintech")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de apps"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 7: Video & Reels */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-violet-500/20 border border-violet-400/30 text-violet-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Video className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Videos, Reels & TikTok</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Analiza la retención segundo a segundo, el gancho visual (hook) de 3s y la lectura de subtítulos animados.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("video")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-violet-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Video
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("video")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de video"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 8: Logo Review & Branding */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Auditoría de Logos (IA)</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Auditoría técnica de logotipos comerciales: escalabilidad, reglas de color, legibilidad e impacto de marca.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("logoReview")}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center shadow-sm"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Abrir Logo Reviewer
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Category Tabs */}
-      <div className="flex bg-slate-100 p-1 rounded-2xl w-fit overflow-x-auto max-w-full space-x-1 border border-slate-200/40">
+      <div id="studies-grid" className="flex bg-slate-100 p-1 rounded-2xl w-fit overflow-x-auto max-w-full space-x-1 border border-slate-200/40">
         <button
           onClick={() => setSelectedCategory("all")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${

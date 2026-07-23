@@ -7,6 +7,75 @@ import { Campaign } from "./types";
 
 export const campaignPresets: Campaign[] = [
   {
+    id: "preset-poster-nike",
+    name: "Cartel Publicitario: Valla Vía Pública 'Run Without Limits'",
+    description: "Estudio de atención en vía pública (Outdoor / Billboard). Mide la visibilidad del atleta, el impacto de la frase principal y el reconocimiento de logotipo a distancia.",
+    createdAt: "2026-07-09T10:00:00Z",
+    imageName: "nike_poster_billboard.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=800&q=80",
+    isPreset: true,
+    status: "ready",
+    category: "keyvisual",
+    areasOfInterest: [
+      { id: "aoi-p-athlete", name: "Corredor / Atleta en Acción", x: 50, y: 45, width: 45, height: 50 },
+      { id: "aoi-p-title", name: "Titular Principal ('RUN WITHOUT LIMITS')", x: 25, y: 22, width: 40, height: 15 },
+      { id: "aoi-p-logo", name: "Logotipo Isotipo de Marca (Swoosh)", x: 80, y: 15, width: 20, height: 10 },
+      { id: "aoi-p-cta", name: "Llamado a la Acción / Hashtag", x: 25, y: 82, width: 30, height: 8 }
+    ],
+    predictive: {
+      clarityScore: 91,
+      cognitiveLoad: 28,
+      focusAreas: [
+        { x: 52, y: 42, radius: 22, weight: 100, name: "Atleta en Carrera (Contraste dinámico)" },
+        { x: 28, y: 22, radius: 16, weight: 88, name: "Titular Principal: RUN WITHOUT LIMITS" },
+        { x: 80, y: 15, radius: 12, weight: 82, name: "Logotipo de Marca Superior Derecho" },
+        { x: 28, y: 82, radius: 10, weight: 65, name: "Hashtag de Campaña #RunWithoutLimits" }
+      ],
+      gazePath: [
+        { id: "pg1", x: 52, y: 42, sequence: 1, durationMs: 600, label: "Fijación 1: La silueta en movimiento del atleta capta el impacto inicial en vía pública" },
+        { id: "pg2", x: 28, y: 22, sequence: 2, durationMs: 520, label: "Fijación 2: Lectura inmediata del titular en tipografía bold con alto contraste" },
+        { id: "pg3", x: 80, y: 15, sequence: 3, durationMs: 380, label: "Fijación 3: Reconocimiento del logotipo de marca en el cuadrante superior" },
+        { id: "pg4", x: 28, y: 82, sequence: 4, durationMs: 300, label: "Fijación 4: Fijación en el hashtag social inferior" }
+      ],
+      reportText: {
+        summary: "El cartel y valla publicitaria para Vía Pública 'Run Without Limits' muestra una ejecución heurística excepcional para impresos y mobiliario urbano (Clarity Score 91%). La figura humana del atleta en carrera sobre el fondo urbano genera un contraste dinámico soberbio que atrapa el primer impacto visual en menos de 180ms. La transición hacia el titular en tipografía condensada 'RUN WITHOUT LIMITS' permite transmitir la promesa de marca de forma instantánea. La carga cognitiva es sumamente baja (28%), asegurando que conductores y peatones procesen el mensaje completo en menos de 2.5 segundos.",
+        strengths: [
+          "Impresionante capacidad de atracción en la vía pública gracias a la nitidez y dinamismo del sujeto principal.",
+          "Tipografía en bloque negro y blanco con un contraste superlativo de 8.2:1 respecto al fondo.",
+          "Aislamiento perfecto del logotipo en la esquina superior derecha que permite asociar la marca sin estorbar."
+        ],
+        weaknesses: [
+          "El hashtag inferior queda en una zona de atención reducida para peatones a gran velocidad.",
+          "El zapato del corredor pierde algo de detalle con la sombra del pavimento inferior."
+        ],
+        recommendations: [
+          "Incrementar el tamaño de fuente del hashtag inferior un 20% para asegurar legibilidad a más de 15 metros de distancia.",
+          "Elevar ligeramente la luminosidad del calzado deportivo para resaltar la innovación de producto."
+        ]
+      }
+    },
+    realGaze: {
+      gazePoints: [
+        { x: 52, y: 42, timestamp: 100, durationMs: 580 },
+        { x: 28, y: 22, timestamp: 700, durationMs: 500 },
+        { x: 80, y: 15, timestamp: 1250, durationMs: 360 },
+        { x: 28, y: 82, timestamp: 1650, durationMs: 280 }
+      ],
+      heatmapPoints: [
+        { x: 52, y: 42, weight: 1.0 },
+        { x: 28, y: 22, weight: 0.88 },
+        { x: 80, y: 15, weight: 0.82 },
+        { x: 28, y: 82, weight: 0.65 }
+      ],
+      durationMs: 3800
+    },
+    emotions: [
+      { timestamp: 0, engagement: 58, joy: 15, surprise: 20, confusion: 5, neutral: 60 },
+      { timestamp: 1, engagement: 82, joy: 50, surprise: 35, confusion: 2, neutral: 25 },
+      { timestamp: 2, engagement: 85, joy: 62, surprise: 15, confusion: 1, neutral: 22 }
+    ]
+  },
+  {
     id: "preset-smartwatch",
     name: "Landing Page: Smartwatch 'Aura 3'",
     description: "Evaluación de la jerarquía visual de la nueva página de producto. Analiza si la atención se centra en el botón de compra y los beneficios clave.",

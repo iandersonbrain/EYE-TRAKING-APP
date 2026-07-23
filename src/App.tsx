@@ -521,6 +521,7 @@ export default function App() {
                 onDeleteCampaign={handleDeleteCampaign}
                 onAnalyzeCampaign={handleAnalyzeCampaign}
                 isAnalyzing={isAnalyzing}
+                onNavigateTab={(tab) => setActiveTab(tab)}
               />
             )}
 
