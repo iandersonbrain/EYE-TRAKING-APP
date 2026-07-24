@@ -1,4 +1,5 @@
 import React, { useState, useRef, ChangeEvent } from "react";
+import { compressBase64Image } from "../lib/imageUtils";
 import { 
   ShieldCheck, 
   AlertCircle, 
@@ -175,25 +176,31 @@ export default function LogoReviewer() {
     setIsAnalyzing(true);
 
     try {
+      const compressedLogo = await compressBase64Image(uploadedLogo, 1000, 1000, 0.85);
+
       const response = await fetch("/api/logo-analysis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageBase64: uploadedLogo,
+          imageBase64: compressedLogo,
           logoName: logoName,
           category: category
         })
       });
 
-      const data = await response.json();
-      if (response.ok) {
+      let data: any = null;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      }
+
+      if (response.ok && data) {
         setAuditResult(data);
       } else {
-        setAuditResult(data.simulatedData || DEFAULT_AUDIT_RESULT);
+        setAuditResult((data && data.simulatedData) ? data.simulatedData : generateMockReview(logoName, category));
       }
     } catch (e) {
-      console.error("Logo audit failed, falling back to simulated data", e);
-      // Generate a mock response customized to what they input
+      console.warn("Logo audit API connection failed (Netlify static host detected), using client-side generator", e);
       const simulated = generateMockReview(logoName, category);
       setAuditResult(simulated);
     } finally {

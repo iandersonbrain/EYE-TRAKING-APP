@@ -6,7 +6,8 @@
 import React, { useState, useRef } from "react";
 import { Campaign } from "../types";
 import { campaignPresets } from "../campaignPresets";
-import { Plus, Image as ImageIcon, Trash2, Calendar, FileText, ChevronRight, UploadCloud, Cpu, AlertCircle, Frame, Megaphone, ShoppingCart, Package, Globe, Smartphone, Video, Sparkles } from "lucide-react";
+import { Plus, Image as ImageIcon, Trash2, Calendar, FileText, ChevronRight, UploadCloud, Cpu, AlertCircle, Frame, Megaphone, ShoppingCart, Package, Globe, Smartphone, Video, Sparkles, Car, Store, Eye } from "lucide-react";
+import OOHShowcase from "./OOHShowcase";
 
 interface CampaignsListProps {
   campaigns: Campaign[];
@@ -1000,25 +1001,39 @@ export default function CampaignsList({
                 </div>
               </div>
 
-              {/* Card 8: Logo Review & Branding */}
+              {/* Card 8: Publicidad Exterior & OOH (Validación OOH) */}
               <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
                 <div>
-                  <div className="p-2.5 w-fit rounded-xl bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 mb-3 group-hover:scale-105 transition-transform">
-                    <Sparkles className="w-6 h-6" />
+                  <div className="p-2.5 w-fit rounded-xl bg-rose-500/20 border border-rose-400/30 text-rose-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Car className="w-6 h-6" />
                   </div>
-                  <h4 className="font-bold text-white text-sm">Auditoría de Logos (IA)</h4>
+                  <h4 className="font-bold text-white text-sm">Validación OOH & Exterior</h4>
                   <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
-                    Auditoría técnica de logotipos comerciales: escalabilidad, reglas de color, legibilidad e impacto de marca.
+                    Evalúa legibilidad a distancia, jerarquía y atención a 2-3s en vehículos/flotas, vitrinas comerciales y columnas de retail.
                   </p>
                 </div>
 
                 <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
                   <button
-                    onClick={() => handleSelectToolCategory("logoReview")}
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center shadow-sm"
+                    onClick={() => {
+                      const element = document.getElementById("ooh-showcase");
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth" });
+                      } else {
+                        handleSelectToolCategory("keyvisual");
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center shadow-sm cursor-pointer"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Abrir Logo Reviewer
+                    <Eye className="w-3.5 h-3.5" />
+                    Probar Validación OOH
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("keyvisual")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0 cursor-pointer"
+                    title="Ver estudios de publicidad exterior"
+                  >
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -1026,6 +1041,43 @@ export default function CampaignsList({
             </div>
           </div>
         </div>
+      )}
+
+      {/* SECCIÓN INDEPENDIENTE: AUDITORÍA TÉCNICA DE LOGOS & MARCA (FUERA DE HERRAMIENTAS DE EYE-TRACKING) */}
+      {!showAddForm && (
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 border border-slate-800 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 my-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex items-start space-x-4 relative z-10">
+            <div className="p-3 bg-indigo-600/20 rounded-2xl border border-indigo-500/40 text-indigo-400 shrink-0">
+              <Sparkles className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-[10px] font-mono font-bold uppercase">
+                <span>Módulo Independiente de Branding</span>
+              </div>
+              <h3 className="text-lg font-bold text-white font-display">
+                Auditoría Técnica de Logotipos & Identidad de Marca (Logo Reviewer AI)
+              </h3>
+              <p className="text-slate-300 text-xs max-w-2xl leading-relaxed">
+                Herramienta especializada de diseño vectorial independiente de las pruebas de eye-tracking. Analiza la escalabilidad a 16px, versatilidad en bordes, legibilidad en fondos complejos y contraste sin requerir simulaciones de mirada.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 w-full md:w-auto relative z-10">
+            <button
+              onClick={() => handleSelectToolCategory("logoReview")}
+              className="w-full md:w-auto px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-indigo-600/25 flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-indigo-200" />
+              <span>Abrir Auditoría de Logos</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Out-of-Home (OOH) Publicidad Exterior Use Cases Showcase */}
+      {!showAddForm && (
+        <OOHShowcase onTestDesign={(category) => handleSelectToolCategory(category)} />
       )}
 
       {/* Category Tabs */}

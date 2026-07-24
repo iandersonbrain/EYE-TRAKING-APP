@@ -22,7 +22,13 @@ import {
   Clock,
   HelpCircle,
   Download,
-  Loader2
+  Loader2,
+  Smartphone,
+  Monitor,
+  Square,
+  Layout,
+  Maximize2,
+  Info
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -59,6 +65,10 @@ export default function VideoAnalysisView({ campaign }: VideoAnalysisViewProps) 
   const [duration, setDuration] = useState(15);
   const [showHelp, setShowHelp] = useState(true);
   const [hoveredScene, setHoveredScene] = useState<string | null>(null);
+
+  const isReelInit = campaign.id === "preset-video-reel" || campaign.category === "tiktok" || campaign.name.toLowerCase().includes("reel") || campaign.name.toLowerCase().includes("tiktok");
+  type VideoRatio = "9:16" | "16:9" | "1:1" | "4:5";
+  const [videoRatio, setVideoRatio] = useState<VideoRatio>(isReelInit ? "9:16" : "16:9");
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -298,138 +308,184 @@ export default function VideoAnalysisView({ campaign }: VideoAnalysisViewProps) 
   };
 
   const isReel = campaign.id === "preset-video-reel" || campaign.category === "tiktok" || campaign.name.toLowerCase().includes("reel") || campaign.name.toLowerCase().includes("tiktok");
+  const totalDuration = duration && duration > 0 ? duration : 15;
 
-  // Dynamic Scene breakdown based on format
-  const scenes: Scene[] = isReel ? [
-    {
-      id: "scene-r1",
-      name: "Escena 1: El Gancho (Hook)",
-      startTime: 0,
-      endTime: 3,
-      description: "Presentación humana y rostro sonriente. Retiene al usuario en los primeros 3 segundos decisivos.",
-      avgEngagement: 85,
-      attentionTarget: "Rostro & Sonrisa"
-    },
-    {
-      id: "scene-r2",
-      name: "Escena 2: Muestra de Producto",
-      startTime: 3,
-      endTime: 8,
-      description: "Foco principal en el vaso de Café Frapé con hielo. Despierta deseo y frescura.",
-      avgEngagement: 94,
-      attentionTarget: "Vaso de Frapé con Hielo"
-    },
-    {
-      id: "scene-r3",
-      name: "Escena 3: Explicación & Subtítulos",
-      startTime: 8,
-      endTime: 12,
-      description: "Siga la narración de audio reforzada con subtítulos amarillos en bloque.",
-      avgEngagement: 82,
-      attentionTarget: "Subtítulos en pantalla"
-    },
-    {
-      id: "scene-r4",
-      name: "Escena 4: Marca & Cierre",
-      startTime: 12,
-      endTime: 15,
-      description: "Cierre dinámico con logotipo de café al centro y llamada a la acción.",
-      avgEngagement: 85,
-      attentionTarget: "Logotipo de Café"
-    }
-  ] : [
-    {
-      id: "scene-1",
-      name: "Escena 1: Apertura Sensorial",
-      startTime: 0,
-      endTime: 3,
-      description: "Vertido dinámico del líquido con hielo y burbujas. Captura la atención instantánea.",
-      avgEngagement: 65,
-      attentionTarget: "Vaso y líquido en movimiento"
-    },
-    {
-      id: "scene-2",
-      name: "Escena 2: Clímax de Frescura",
-      startTime: 3,
-      endTime: 7,
-      description: "Cámara lenta de limones cayendo y salpicaduras. Pico emocional de sorpresa.",
-      avgEngagement: 85,
-      attentionTarget: "Limón y hielo flotante"
-    },
-    {
-      id: "scene-3",
-      name: "Escena 3: Revelado de Marca",
-      startTime: 7,
-      endTime: 11,
-      description: "Primer plano de la botella con el logotipo 'Spark Citrus' en la etiqueta central.",
-      avgEngagement: 76,
-      attentionTarget: "Logotipo de Marca"
-    },
-    {
-      id: "scene-4",
-      name: "Escena 4: Cierre & CTA",
-      startTime: 11,
-      endTime: 15,
-      description: "Eslogan final 'Refresca tu Mente' con llamada a la acción y packshot.",
-      avgEngagement: 81,
-      attentionTarget: "Eslogan y botella de cierre"
-    }
-  ];
+  // Dynamic Scene breakdown based on format and actual video duration
+  const t1 = Math.round(totalDuration * 0.2 * 10) / 10;
+  const t2 = Math.round(totalDuration * 0.55 * 10) / 10;
+  const t3 = Math.round(totalDuration * 0.8 * 10) / 10;
+  const t4 = Math.round(totalDuration * 10) / 10;
 
-  // Helper to retrieve simulated heatmap coordinates dynamically based on current time and format
+  let scenes: Scene[] = [];
+
+  if (campaign.id === "preset-video-reel") {
+    scenes = [
+      {
+        id: "scene-r1",
+        name: "Escena 1: El Gancho (Hook)",
+        startTime: 0,
+        endTime: t1,
+        description: "Presentación humana y rostro sonriente. Retiene al usuario en los primeros segundos decisivos.",
+        avgEngagement: 85,
+        attentionTarget: "Rostro & Sonrisa"
+      },
+      {
+        id: "scene-r2",
+        name: "Escena 2: Muestra de Producto",
+        startTime: t1,
+        endTime: t2,
+        description: "Foco principal en el vaso de Café Frapé con hielo. Despierta deseo y frescura.",
+        avgEngagement: 94,
+        attentionTarget: "Vaso de Frapé con Hielo"
+      },
+      {
+        id: "scene-r3",
+        name: "Escena 3: Explicación & Subtítulos",
+        startTime: t2,
+        endTime: t3,
+        description: "Siga la narración de audio reforzada con subtítulos amarillos en bloque.",
+        avgEngagement: 82,
+        attentionTarget: "Subtítulos en pantalla"
+      },
+      {
+        id: "scene-r4",
+        name: "Escena 4: Marca & Cierre",
+        startTime: t3,
+        endTime: t4,
+        description: "Cierre dinámico con logotipo de café al centro y llamada a la acción.",
+        avgEngagement: 85,
+        attentionTarget: "Logotipo de Café"
+      }
+    ];
+  } else if (campaign.id === "preset-video-ad") {
+    scenes = [
+      {
+        id: "scene-1",
+        name: "Escena 1: Apertura Sensorial",
+        startTime: 0,
+        endTime: t1,
+        description: "Vertido dinámico del líquido con hielo y burbujas. Captura la atención instantánea.",
+        avgEngagement: 65,
+        attentionTarget: "Vaso y líquido en movimiento"
+      },
+      {
+        id: "scene-2",
+        name: "Escena 2: Clímax de Frescura",
+        startTime: t1,
+        endTime: t2,
+        description: "Cámara lenta de limones cayendo y salpicaduras. Pico emocional de sorpresa.",
+        avgEngagement: 85,
+        attentionTarget: "Limón y hielo flotante"
+      },
+      {
+        id: "scene-3",
+        name: "Escena 3: Revelado de Marca",
+        startTime: t2,
+        endTime: t3,
+        description: "Primer plano de la botella con el logotipo 'Spark Citrus' en la etiqueta central.",
+        avgEngagement: 76,
+        attentionTarget: "Logotipo de Marca"
+      },
+      {
+        id: "scene-4",
+        name: "Escena 4: Cierre & CTA",
+        startTime: t3,
+        endTime: t4,
+        description: "Eslogan final 'Refresca tu Mente' con llamada a la acción y packshot.",
+        avgEngagement: 81,
+        attentionTarget: "Eslogan y botella de cierre"
+      }
+    ];
+  } else {
+    // Custom uploaded video or reel
+    scenes = [
+      {
+        id: "scene-c1",
+        name: isReel ? "Escena 1: Hook Inicial (Apertura)" : "Escena 1: Apertura & Gancho Visual",
+        startTime: 0,
+        endTime: t1,
+        description: `Impacto inicial de ${campaign.name}. Retiene la mirada en los primeros segundos.`,
+        avgEngagement: 88,
+        attentionTarget: isReel ? "Sujeto / Rostro Principal" : "Acción Principal de Apertura"
+      },
+      {
+        id: "scene-c2",
+        name: isReel ? "Escena 2: Demostración & Producto" : "Escena 2: Desarrollo & Contenido Clave",
+        startTime: t1,
+        endTime: t2,
+        description: `Presentación de la propuesta central de ${campaign.name}. Foco en el mensaje o producto.`,
+        avgEngagement: 92,
+        attentionTarget: "Producto / Detalle Central"
+      },
+      {
+        id: "scene-c3",
+        name: isReel ? "Escena 3: Explicación & Subtítulos" : "Escena 3: Punto de Mayor Retención",
+        startTime: t2,
+        endTime: t3,
+        description: `Detalles explicativos y refuerzo del mensaje de ${campaign.name}.`,
+        avgEngagement: 84,
+        attentionTarget: isReel ? "Subtítulos / Texto en pantalla" : "Sujeto & Elemento de Marca"
+      },
+      {
+        id: "scene-c4",
+        name: "Escena 4: Cierre & Marca (CTA)",
+        startTime: t3,
+        endTime: t4,
+        description: `Cierre del video con fijación en el logotipo y la llamada a la acción final.`,
+        avgEngagement: 86,
+        attentionTarget: "Logotipo & Call to Action"
+      }
+    ];
+  }
+
+  // Helper to retrieve simulated heatmap coordinates dynamically based on current time, format and total duration
   const getDynamicHeatmapPoints = (time: number) => {
+    const progress = totalDuration > 0 ? time / totalDuration : 0; // 0.0 to 1.0
+
     if (isReel) {
-      // 0 to 3s: Focus is high on creator's face (x=50, y=35)
-      if (time >= 0 && time < 3) {
+      if (progress >= 0 && progress < 0.2) {
         return [{ x: 50, y: 35, weight: 0.95 }];
       }
-      // 3 to 8s: Focus is high on the product glass (x=50, y=65)
-      if (time >= 3 && time < 8) {
+      if (progress >= 0.2 && progress < 0.55) {
         return [
           { x: 50, y: 65, weight: 0.98 },
           { x: 50, y: 35, weight: 0.30 }
         ];
       }
-      // 8 to 12s: Focus shifts to subtitles (x=50, y=82) and simulates saccadic reading
-      if (time >= 8 && time < 12) {
-        const scanStep = Math.floor(time * 2.5) % 4; // 0, 1, 2, 3
-        const xScan = 32 + scanStep * 12; // 32%, 44%, 56%, 68%
+      if (progress >= 0.55 && progress < 0.8) {
+        const scanStep = Math.floor(time * 2.5) % 4;
+        const xScan = 32 + scanStep * 12;
         return [
-          { x: xScan, y: 82, weight: 0.95 }, // Punto principal de lectura (barrido horizontal)
-          { x: Math.max(30, xScan - 12), y: 82, weight: 0.45 }, // Residuos de fijación anterior
-          { x: 50, y: 65, weight: 0.30 } // Foco pasivo en el fondo/vaso
+          { x: xScan, y: 82, weight: 0.95 },
+          { x: Math.max(30, xScan - 12), y: 82, weight: 0.45 },
+          { x: 50, y: 65, weight: 0.30 }
         ];
       }
-      // 12 to 15s: Focus shifts to brand logo (x=50, y=50)
       return [
         { x: 50, y: 50, weight: 0.95 },
         { x: 50, y: 82, weight: 0.35 }
       ];
     }
 
-    // 0 to 3s: Focus is on the glass / drink being poured (center-bottom)
-    if (time >= 0 && time < 3) {
+    if (progress >= 0 && progress < 0.2) {
       return [{ x: 50, y: 52, weight: 0.95 }];
     }
-    // 3 to 7s: Focus shifts to fruit splashing (left-bottom) and glass (center)
-    if (time >= 3 && time < 7) {
+    if (progress >= 0.2 && progress < 0.55) {
       return [
         { x: 32, y: 65, weight: 0.90 },
         { x: 50, y: 52, weight: 0.50 }
       ];
     }
-    // 7 to 11s: Focus is highly concentrated on logo (top-center)
-    if (time >= 7 && time < 11) {
+    if (progress >= 0.55 && progress < 0.8) {
       return [
         { x: 50, y: 18, weight: 0.95 },
         { x: 50, y: 52, weight: 0.40 }
       ];
     }
-    // 11 to 15s: Focus shifts to eslogan text (bottom) and logo (top) with horizontal reading saccades
     const scanStep = Math.floor(time * 2) % 4;
-    const xScan = 35 + scanStep * 10; // 35%, 45%, 55%, 65%
+    const xScan = 35 + scanStep * 10;
     return [
-      { x: xScan, y: 80, weight: 0.95 }, // Escaneo horizontal de izquierda a derecha del eslogan
+      { x: xScan, y: 80, weight: 0.95 },
       { x: Math.max(30, xScan - 10), y: 80, weight: 0.40 },
       { x: 50, y: 18, weight: 0.60 }
     ];
@@ -600,9 +656,42 @@ export default function VideoAnalysisView({ campaign }: VideoAnalysisViewProps) 
               </span>
             </div>
 
-            {/* Video container with Heatmap Overlay */}
-            <div id="video-frame-container" className={`relative w-full rounded-2xl bg-black overflow-hidden border border-slate-800 flex items-center justify-center transition-all duration-500 ${
-              isReel ? "aspect-[9/16] max-w-[270px] mx-auto shadow-2xl ring-4 ring-slate-900" : "aspect-video"
+            {/* Video Format Ratio Selection Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 gap-2 mb-4">
+              <div className="flex items-center space-x-1.5 text-xs text-slate-300 pl-1 font-mono">
+                <Maximize2 className="w-3.5 h-3.5 text-violet-400" />
+                <span className="font-bold">Formato & Proporción:</span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                {[
+                  { id: "9:16", label: "9:16 Vertical (Reels/TikTok)", icon: Smartphone },
+                  { id: "16:9", label: "16:9 Horizontal (YouTube)", icon: Monitor },
+                  { id: "1:1", label: "1:1 Cuadrado (Feed)", icon: Square },
+                  { id: "4:5", label: "4:5 Retrato Mobile", icon: Layout },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setVideoRatio(item.id as "9:16" | "16:9" | "1:1" | "4:5")}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer border ${
+                      videoRatio === item.id
+                        ? "bg-violet-600 text-white border-violet-500 shadow-sm shadow-violet-600/30"
+                        : "bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white"
+                    }`}
+                  >
+                    <item.icon className="w-3 h-3" />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Video container with Heatmap Overlay & Dynamic Ratio */}
+            <div id="video-frame-container" className={`relative w-full rounded-2xl bg-black overflow-hidden border border-slate-800 flex items-center justify-center transition-all duration-300 ${
+              videoRatio === "9:16" ? "aspect-[9/16] max-w-[270px] mx-auto shadow-2xl ring-4 ring-slate-900" :
+              videoRatio === "16:9" ? "aspect-video" :
+              videoRatio === "1:1" ? "aspect-square max-w-[420px] mx-auto shadow-2xl" :
+              "aspect-[4/5] max-w-[340px] mx-auto shadow-xl"
             }`}>
               <video
                 ref={videoRef}
@@ -614,6 +703,18 @@ export default function VideoAnalysisView({ campaign }: VideoAnalysisViewProps) 
                 playsInline
                 loop
               />
+
+              {/* Safe Zone Overlays for Vertical Video */}
+              {videoRatio === "9:16" && (
+                <div className="absolute inset-0 pointer-events-none z-10 border-t-[40px] border-b-[60px] border-black/40 flex flex-col justify-between p-2">
+                  <div className="flex items-center justify-between text-[8px] text-white/70 font-mono">
+                    <span>• TikTok / Reels UI Top</span>
+                  </div>
+                  <div className="text-[8px] text-amber-300/80 font-mono text-center bg-black/60 py-0.5 rounded">
+                    Zona Inferior de CTA & Descripción
+                  </div>
+                </div>
+              )}
 
               {/* Dynamic Heatmap overlay synced with currentTime */}
               <div className="absolute inset-0 pointer-events-none z-10">
@@ -788,7 +889,8 @@ export default function VideoAnalysisView({ campaign }: VideoAnalysisViewProps) 
                 Reporte de Retención de Video
               </h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                {campaign.predictive?.reportText.summary}
+                {campaign.predictive?.reportText?.summary || 
+                  `[Análisis de Retención de Video: ${campaign.name}] El contenido demuestra un alto nivel de atracción en la fase inicial del gancho (Hook). El recorrido visual se mantiene centrado en el sujeto principal y la narrativa, permitiendo una transición fluida hacia el cierre con presencia de marca y llamado a la acción.`}
               </p>
             </div>
 
@@ -797,7 +899,14 @@ export default function VideoAnalysisView({ campaign }: VideoAnalysisViewProps) 
                 <CheckCircle className="w-3.5 h-3.5 mr-1" /> Fortalezas del Spot
               </h4>
               <ul className="space-y-1.5">
-                {campaign.predictive?.reportText.strengths.map((str, i) => (
+                {((campaign.predictive?.reportText?.strengths && campaign.predictive.reportText.strengths.length > 0) 
+                  ? campaign.predictive.reportText.strengths 
+                  : [
+                      `Excelente capacidad de enganche inicial en los primeros ${Math.round(totalDuration * 0.2)} segundos.`,
+                      "Transición fluida que mantiene la atención del espectador sin sobrecargar.",
+                      "Clara visibilidad del elemento central durante la secuencia."
+                    ]
+                ).map((str, i) => (
                   <li key={`v-str-${i}`} className="text-[11px] text-slate-600 flex items-start">
                     <span className="text-emerald-500 mr-1.5 font-bold">•</span>
                     <span>{str}</span>
@@ -811,7 +920,13 @@ export default function VideoAnalysisView({ campaign }: VideoAnalysisViewProps) 
                 <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Puntos Críticos / Desgaste
               </h4>
               <ul className="space-y-1.5">
-                {campaign.predictive?.reportText.weaknesses.map((weak, i) => (
+                {((campaign.predictive?.reportText?.weaknesses && campaign.predictive.reportText.weaknesses.length > 0)
+                  ? campaign.predictive.reportText.weaknesses
+                  : [
+                      "El texto secundario puede competir levemente con elementos dinámicos en segundo plano.",
+                      "El área de cierre requiere 0.5s adicionales de exposición estática para maximizar la recordación."
+                    ]
+                ).map((weak, i) => (
                   <li key={`v-weak-${i}`} className="text-[11px] text-slate-600 flex items-start">
                     <span className="text-rose-500 mr-1.5 font-bold">•</span>
                     <span>{weak}</span>
@@ -825,7 +940,14 @@ export default function VideoAnalysisView({ campaign }: VideoAnalysisViewProps) 
                 <Lightbulb className="w-3.5 h-3.5 mr-1 text-amber-600" /> Optimización de Retención (CRO)
               </h4>
               <ul className="space-y-1.5">
-                {campaign.predictive?.reportText.recommendations.map((rec, i) => (
+                {((campaign.predictive?.reportText?.recommendations && campaign.predictive.reportText.recommendations.length > 0)
+                  ? campaign.predictive.reportText.recommendations
+                  : [
+                      "Añadir una placa o sombra traslúcida tras los subtítulos para reforzar la legibilidad.",
+                      "Consolidar la posición del logotipo de marca durante los últimos segundos del video.",
+                      "Realizar una prueba A/B con una versión alternativa del gancho inicial."
+                    ]
+                ).map((rec, i) => (
                   <li key={`v-rec-${i}`} className="text-[11px] text-slate-700 flex items-start">
                     <span className="bg-amber-200 text-amber-900 w-4 h-4 rounded-full flex items-center justify-center font-bold text-[9px] mr-2 shrink-0">
                       {i + 1}

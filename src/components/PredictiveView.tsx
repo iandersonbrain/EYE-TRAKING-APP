@@ -7,7 +7,26 @@ import { useState } from "react";
 import { Campaign, FocusPoint, GazePathPoint } from "../types";
 import HeatmapOverlay from "./HeatmapOverlay";
 import VideoAnalysisView from "./VideoAnalysisView";
-import { Eye, HelpCircle, AlertTriangle, CheckCircle, Lightbulb, TrendingUp, Cpu, Award, Layers, Download, FileText, Loader2 } from "lucide-react";
+import { 
+  Eye, 
+  HelpCircle, 
+  AlertTriangle, 
+  CheckCircle, 
+  Lightbulb, 
+  TrendingUp, 
+  Cpu, 
+  Award, 
+  Layers, 
+  Download, 
+  FileText, 
+  Loader2,
+  Smartphone,
+  Monitor,
+  Square,
+  Layout,
+  Maximize2,
+  Info
+} from "lucide-react";
 import { motion } from "motion/react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -16,11 +35,14 @@ interface PredictiveViewProps {
   campaign: Campaign;
 }
 
+type AspectRatio = "original" | "1:1" | "9:16" | "16:9" | "4:5";
+
 export default function PredictiveView({ campaign }: PredictiveViewProps) {
   const [viewMode, setViewMode] = useState<"heatmap" | "gazepath" | "both">("heatmap");
   const [hoveredPoint, setHoveredPoint] = useState<string | null>(null);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedRatio, setSelectedRatio] = useState<AspectRatio>("original");
 
   // If campaign is a video or tiktok, render the specialized VideoAnalysisView
   if (campaign.category === "video" || campaign.category === "tiktok") {
@@ -489,14 +511,63 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
             </div>
           </div>
 
-          {/* Interactive Image Frame */}
-          <div className="relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center">
+          {/* Aspect Ratio / Format Selection Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800 gap-2 mb-3">
+            <div className="flex items-center space-x-1.5 text-xs text-slate-300 pl-1 font-mono">
+              <Maximize2 className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="font-bold">Proporción de Imagen / Formato:</span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              {[
+                { id: "original", label: "Original", icon: Layout },
+                { id: "1:1", label: "1:1 Cuadrado", icon: Square },
+                { id: "9:16", label: "9:16 Stories/Reels", icon: Smartphone },
+                { id: "16:9", label: "16:9 Horizontal", icon: Monitor },
+                { id: "4:5", label: "4:5 Feed", icon: Layout },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setSelectedRatio(item.id as AspectRatio)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center space-x-1 cursor-pointer border ${
+                    selectedRatio === item.id
+                      ? "bg-indigo-600 text-white border-indigo-500 shadow-sm shadow-indigo-600/30"
+                      : "bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white"
+                  }`}
+                >
+                  <item.icon className="w-3 h-3" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Interactive Image Frame with Dynamic Aspect Ratio */}
+          <div className={`relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center transition-all duration-300 ${
+            selectedRatio === "1:1" ? "aspect-square max-w-[460px] mx-auto shadow-2xl" :
+            selectedRatio === "9:16" ? "aspect-[9/16] max-w-[270px] mx-auto shadow-2xl ring-2 ring-indigo-500/30" :
+            selectedRatio === "16:9" ? "aspect-video shadow-xl" :
+            selectedRatio === "4:5" ? "aspect-[4/5] max-w-[370px] mx-auto shadow-xl" :
+            "max-h-[520px]"
+          }`}>
                 <img
                   src={imageUrl}
                   alt={name}
                   referrerPolicy="no-referrer"
-                  className="w-full h-auto object-contain max-h-[500px]"
+                  className={`w-full h-full ${selectedRatio === "original" ? "object-contain max-h-[500px]" : "object-cover"}`}
                 />
+
+                {/* Safe-Zone Overlays for Mobile Formats */}
+                {selectedRatio === "9:16" && (
+                  <div className="absolute inset-0 pointer-events-none z-10 border-t-[40px] border-b-[60px] border-black/40 flex flex-col justify-between p-2">
+                    <div className="flex items-center justify-between text-[8px] text-white/70 font-mono">
+                      <span>• Instagram / TikTok Safe Zone Top</span>
+                    </div>
+                    <div className="text-[8px] text-amber-300/80 font-mono text-center bg-black/60 py-0.5 rounded">
+                      Zona Inferior de CTA & Interfaz Móvil
+                    </div>
+                  </div>
+                )}
 
             {/* Heatmap Overlay Layer */}
             {(viewMode === "heatmap" || viewMode === "both") && (
@@ -574,6 +645,22 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
           <p className="text-[11px] text-slate-400 mt-2 text-center italic font-mono">
             * El análisis predice la fijación de la atención visual en los primeros 10 segundos de exposición.
           </p>
+
+          {/* Format-Specific Neuro-Design Insight Box */}
+          {selectedRatio !== "original" && (
+            <div className="bg-indigo-950/80 p-3.5 rounded-xl border border-indigo-800/60 flex items-start space-x-3 text-xs text-indigo-200 mt-3 animate-fade-in">
+              <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-white block mb-0.5">
+                  Neuro-Diseño en Formato {selectedRatio}:
+                </span>
+                {selectedRatio === "9:16" && "En formato vertical 9:16 (Stories/Reels), mantén la marca y el botón CTA entre el 20% y el 75% de la pantalla para garantizar que no queden cubiertos por la interfaz del usuario."}
+                {selectedRatio === "1:1" && "En formato cuadrado 1:1, la composición simétrica central capta la atención inmediata durante el scroll rápido en feeds móviles."}
+                {selectedRatio === "16:9" && "En formato horizontal 16:9 (Banner Web/TV), el patrón de lectura visual F-shape concentra la primera fijación en el cuadrante superior izquierdo."}
+                {selectedRatio === "4:5" && "El formato 4:5 ocupa un 20% más espacio vertical en el feed móvil que el 1:1, incrementando el tiempo de retención (Dwell Time)."}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Areas of Attraction List */}

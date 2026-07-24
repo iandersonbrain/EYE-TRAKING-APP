@@ -6,6 +6,8 @@
 import { useState, useEffect } from "react";
 import { Campaign, GazePoint, EmotionDataPoint } from "./types";
 import { campaignPresets } from "./campaignPresets";
+import { compressBase64Image } from "./lib/imageUtils";
+import { generateClientSimulatedData } from "./lib/simulatedPredictive";
 import CampaignsList from "./components/CampaignsList";
 import PredictiveView from "./components/PredictiveView";
 import WebcamTracker from "./components/WebcamTracker";
@@ -130,21 +132,35 @@ export default function App() {
           }, 80);
 
           try {
+            const compressedSlideImg = await compressBase64Image(slide.imageUrl, 1200, 1200, 0.85);
+
             const response = await fetch("/api/predictive-analysis", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                imageBase64: slide.imageUrl,
+                imageBase64: compressedSlideImg,
                 imageName: `${targetCamp.name} - ${slide.name}`
               })
             });
 
-            const data = await response.json();
-            const slidePredictive = (response.ok && !data.error) ? data : (data.simulatedData || data);
+            let data: any = null;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+              data = await response.json();
+            }
+
+            const slidePredictive = (response.ok && data && !data.error) 
+              ? data 
+              : ((data && data.simulatedData) ? data.simulatedData : generateClientSimulatedData(slide.name, "presentation"));
             
             updatedSlides.push({
               ...slide,
               predictive: slidePredictive
+            });
+          } catch {
+            updatedSlides.push({
+              ...slide,
+              predictive: generateClientSimulatedData(slide.name, "presentation")
             });
           } finally {
             clearInterval(subInterval);
@@ -191,38 +207,58 @@ export default function App() {
         }, 100);
 
         try {
+          // Compress base64 image before sending to avoid Netlify/Serverless payload limits
+          const compressedImage = await compressBase64Image(targetCamp.imageUrl, 1200, 1200, 0.85);
+
           const response = await fetch("/api/predictive-analysis", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              imageBase64: targetCamp.imageUrl,
+              imageBase64: compressedImage,
               imageName: targetCamp.imageName
             })
           });
 
-          const data = await response.json();
+          let data: any = null;
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+          }
+
           clearInterval(interval);
           clearInterval(progressTimer);
           setAnalysisProgressPercent(100);
 
-          if (response.ok && !data.error) {
+          if (response.ok && data && !data.error) {
             setCampaigns(prev => prev.map(c => c.id === id ? {
               ...c,
               status: "ready",
               predictive: data
             } : c));
           } else {
-            // Fallback if failed
+            // Fallback if backend returned error or if static host
+            const fallbackData = (data && data.simulatedData) 
+              ? data.simulatedData 
+              : generateClientSimulatedData(targetCamp.name, targetCamp.category);
+
             setCampaigns(prev => prev.map(c => c.id === id ? {
               ...c,
               status: "ready",
-              predictive: data.simulatedData || data
+              predictive: fallbackData
             } : c));
           }
         } catch (err) {
           clearInterval(interval);
           clearInterval(progressTimer);
-          throw err;
+          setAnalysisProgressPercent(100);
+          console.warn("Conexión API fallida o alojamiento estático Netlify detectado. Generando análisis predictivo local:", err);
+          
+          const fallbackData = generateClientSimulatedData(targetCamp.name, targetCamp.category);
+          setCampaigns(prev => prev.map(c => c.id === id ? {
+            ...c,
+            status: "ready",
+            predictive: fallbackData
+          } : c));
         }
       }
     } catch (err) {
