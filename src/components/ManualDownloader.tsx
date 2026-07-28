@@ -106,7 +106,7 @@ export default function ManualDownloader() {
         return y + boxHeight + 6;
       };
 
-      const TOTAL_PAGES = 5;
+      const TOTAL_PAGES = 6;
 
       // ==============================================================
       // PÁGINA 1: PORTADA Y TABLA DE CONTENIDOS
@@ -118,78 +118,77 @@ export default function ManualDownloader() {
 
       // Abstract logo mark drawing
       doc.setFillColor(79, 70, 229); // Indigo
-      doc.rect(margin, 40, 25, 25, "F");
+      doc.rect(margin, 35, 25, 25, "F");
       doc.setFillColor(236, 72, 153); // Pink
-      doc.circle(margin + 25, 65, 12.5, "F");
+      doc.circle(margin + 25, 60, 12.5, "F");
       doc.setFillColor(56, 189, 248); // Cyan
-      doc.circle(margin + 5, 65, 8, "F");
+      doc.circle(margin + 5, 60, 8, "F");
 
       // Cover Header
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(32);
-      doc.text("OculiMind AI", margin, 95);
+      doc.setFontSize(30);
+      doc.text("OculiMind AI", margin, 90);
 
-      doc.setFontSize(14);
+      doc.setFontSize(13);
       doc.setTextColor(129, 140, 248); // indigo-400
-      doc.text("Manual de Operación y Guía de Buenas Prácticas v1.3.0", margin, 105);
+      doc.text("Manual Técnico de Neuromarketing & Métricas de Publicidad v2.0", margin, 100);
 
       // Horizontal separator line
       doc.setFillColor(51, 65, 85);
-      doc.rect(margin, 112, contentWidth, 0.8, "F");
+      doc.rect(margin, 106, contentWidth, 0.8, "F");
 
       // Description
       doc.setTextColor(203, 213, 225); // slate-300
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(10.5);
-      const descText = "Descubra el poder del Neuromarketing Digital y la Inteligencia Artificial Cognitiva en un único espacio unificado. Este manual actualizado le guiará a través de la evaluación de imágenes y videos (Reels/TikTok), selección de proporciones de pantalla (Aspect Ratio 9:16, 1:1, 16:9, 4:5), zonas seguras para dispositivos móviles, calibración ocular por webcam, Emotion AI, comparativa A/B y auditoría formal de logotipos comerciales.";
+      doc.setFontSize(10);
+      const descText = "Guía operativa y técnica oficial para la evaluación bio-cognitiva de campañas publicitarias. Incluye parámetros estandarizados para Publicidad Exterior (OOH), Páginas Web, Apps Móviles, Reels/TikTok, Meta Ads, Google Display Banners, Pruebas A/B, Matriz DCO, Emotion AI y Auditoría de Logotipos.";
       const descLines = doc.splitTextToSize(descText, contentWidth);
-      doc.text(descLines, margin, 120);
+      doc.text(descLines, margin, 114);
 
       // Metadata Info Box (Inside Cover)
       doc.setFillColor(30, 41, 59); // slate-800
-      doc.rect(margin, 155, contentWidth, 42, "F");
+      doc.rect(margin, 142, contentWidth, 48, "F");
       
       doc.setTextColor(148, 163, 184); // slate-400
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
-      doc.text("INFORMACIÓN DEL SISTEMA", margin + 6, 163);
+      doc.text("PARÁMETROS TÉCNICOS & CAPACIDADES INTEGRADAS", margin + 6, 150);
       
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
+      doc.setFontSize(8);
       doc.setTextColor(241, 245, 249); // slate-200
-      doc.text("•  Nombre de la App: OculiMind AI Smart Suite v1.3.0", margin + 6, 171);
-      doc.text("•  Motor de Inferencia: Gemini Vision & Real-Time Video Analysis Engine", margin + 6, 177);
-      doc.text("•  Módulos Integrados: Video Reels, Aspect Ratios, Eye Tracking, Emotion AI, A/B Testing, Logo Review", margin + 6, 183);
-      doc.text("•  Formatos Soportados: Imágenes (JPG/PNG), Videos (MP4/WebM), Reels (9:16), Banners (16:9)", margin + 6, 189);
-      doc.text("•  Soporte Técnico: iandersonbrain@gmail.com (Workspace Developer Program)", margin + 6, 195);
+      doc.text("•  Stop-Ratio & Hook Rate (0-3s): Medición de la velocidad de detención del desplazamiento táctil en móviles.", margin + 6, 157);
+      doc.text("•  Publicidad Exterior (OOH): Regla de atención a alta velocidad (<3s) y restricción de máximo 2 elementos focales.", margin + 6, 163);
+      doc.text("•  Web & Apps Móviles: Lectura en patrón F/Z, índice de carga cognitiva y accesibilidad Thumb Zone.", margin + 6, 169);
+      doc.text("•  Formatos Publicitarios: Banners IAB Google Display (Skyscraper, Leaderboard) y Meta Safe Zones (9:16 / 1:1).", margin + 6, 175);
+      doc.text("•  Motor Algorítmico en Tiempo Real: Sincronización continua de criterios de puntuación de Meta Ads y Google Ads.", margin + 6, 181);
 
       // Table of Contents Header
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      doc.text("TABLA DE CONTENIDOS", margin, 212);
+      doc.text("TABLA DE CONTENIDOS", margin, 202);
 
       doc.setFillColor(79, 70, 229);
-      doc.rect(margin, 215, 20, 1, "F");
+      doc.rect(margin, 205, 20, 1, "F");
 
       // TOC Items
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.setTextColor(226, 232, 240); // slate-200
       
       const tocItems = [
-        { label: "1. Introducción General y Gestión de Estudios de Imagen", page: "Pág. 2" },
-        { label: "2. Eye Tracking Predictivo de Imágenes & Proporciones (Aspect Ratio)", page: "Pág. 2" },
-        { label: "3. Análisis de Video & Reels (Escenas Dinámicas & Retención CRO)", page: "Pág. 3" },
-        { label: "4. Calibración por Webcam Real y Evaluación Ocular en Vivo", page: "Pág. 4" },
-        { label: "5. Emotion AI: Análisis de Sentimientos y Microexpresiones", page: "Pág. 4" },
-        { label: "6. Dashboard 360°, Sandbox Multicapa y Comparativa A/B", page: "Pág. 5" },
-        { label: "7. IA Logo Review & Auditoría Comercial de Marca", page: "Pág. 5" },
+        { label: "1. Glosario Técnico: Stop-Ratio, Hook Rate & Carga Cognitiva", page: "Pág. 2" },
+        { label: "2. Parámetros de Publicidad Exterior (OOH) & Sitios Web / Apps Móviles", page: "Pág. 3" },
+        { label: "3. Análisis de Video, Reels & TikTok (Audio-Off, Safe Zones & Retención)", page: "Pág. 4" },
+        { label: "4. Hub de Anuncios Meta Ads, Google Display Banners & Matriz DCO", page: "Pág. 5" },
+        { label: "5. Monitor Algorítmico en Tiempo Real & Recalibración de Ponderaciones", page: "Pág. 5" },
+        { label: "6. Neuromarketing Empírico (Webcam, Emotion AI) & Auditoría de Logos", page: "Pág. 6" },
       ];
 
       tocItems.forEach((item, index) => {
-        const rowY = 222 + (index * 7);
+        const rowY = 212 + (index * 7);
         doc.text(item.label, margin, rowY);
         doc.text("...........................................................................................................................", margin + 5, rowY - 1, { align: "left" });
         doc.text(item.page, pageWidth - margin, rowY, { align: "right" });
@@ -203,70 +202,113 @@ export default function ManualDownloader() {
 
 
       // ==============================================================
-      // PÁGINA 2: GESTIÓN DE ESTUDIOS Y EYE TRACKING PREDICTIVO (IMÁGENES)
+      // PÁGINA 2: GLOSARIO TÉCNICO DE MEDICIÓN
       // ==============================================================
       doc.addPage();
-      drawPageBase(2, TOTAL_PAGES, "Gestión de Estudios y Eye Tracking Predictivo");
+      drawPageBase(2, TOTAL_PAGES, "Glosario Técnico de Medición & Métricas");
 
       currentY = 38;
 
-      // Section 1: Gestión de Estudios
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
-      doc.setTextColor(15, 23, 42); // slate-900
-      doc.text("1. GESTIÓN DE ESTUDIOS Y CATÁLOGO DE IMÁGENES & VIDEOS", margin, currentY);
+      doc.setTextColor(15, 23, 42);
+      doc.text("1. CONCEPTOS TÉCNICOS DE MEDICIÓN Y BIOMETRÍA COGNITIVA", margin, currentY);
 
       doc.setFillColor(79, 70, 229);
-      doc.rect(margin, currentY + 2, 35, 1, "F");
+      doc.rect(margin, currentY + 2, 45, 1, "F");
       
       currentY += 8;
 
       currentY = writeParagraph(
-        "El módulo de Estudios sirve como el repositorio central para sus piezas publicitarias, banners, anuncios de Reels/TikTok o landing pages. Puede subir tanto imágenes como archivos de video. La plataforma asignará automáticamente la categoría adecuada (estático, video ad o video reel) para aplicar el modelo biocognitivo correspondiente.",
+        "Para interpretar con precisión los dictámenes emitidos por OculiMind AI, es fundamental comprender las métricas biocognitivas clave utilizadas para calificar cada pieza publicitaria:",
         currentY
       );
 
-      // Section 2: Eye Tracking Predictivo e Aspect Ratios
+      currentY = drawInfoBox(
+        "Métricas Principales de Atención y Retención:",
+        [
+          "• STOP-RATIO (Tasa de Detención del Scroll): Porcentaje de usuarios que interrumpe el desplazamiento táctil del pulgar en el feed al detectar un elemento visual con alto contraste o disparador emocional (>70% es Excelente).",
+          "• HOOK RATE (Tasa de Enganche a 3s): Capacidad del video o imagen de retener la mirada del usuario durante los primeros 3 segundos de exposición sin que abandone la pantalla.",
+          "• ÍNDICE DE CARGA COGNITIVA (Cognitive Load): Cantidad de esfuerzo mental necesario para procesar la pieza. Valores superiores a 65% indican saturación visual y provocan fatiga o rechazo.",
+          "• DWELL TIME (Tiempo de Permanencia): Tiempo promedio en milisegundos que las fijaciones foveales se mantienen enfocadas en las zonas clave del mensaje antes de saltar a otro elemento.",
+          "• RUTA SACÁDICA (Focus Path): Secuencia ordenada de saltos oculares que realiza la vista al explorar la composición (de mayor a menor prominencia)."
+        ],
+        currentY,
+        [79, 70, 229]
+      );
+
+
+      // ==============================================================
+      // PÁGINA 3: PUBLICIDAD EXTERIOR (OOH) Y WEB / APPS
+      // ==============================================================
+      doc.addPage();
+      drawPageBase(3, TOTAL_PAGES, "Parámetros OOH (Exterior) & Web / Apps");
+
+      currentY = 38;
+
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(15, 23, 42);
-      doc.text("2. EYE TRACKING PREDICTIVO Y SELECCIÓN DE PROPORCIÓN (ASPECT RATIO)", margin, currentY);
+      doc.text("2. PARÁMETROS TÉCNICOS PARA PUBLICIDAD EXTERIOR (OOH)", margin, currentY);
 
-      doc.setFillColor(236, 72, 153); // Pink
+      doc.setFillColor(225, 29, 72); // Rose
       doc.rect(margin, currentY + 2, 45, 1, "F");
 
       currentY += 8;
 
       currentY = writeParagraph(
-        "Al seleccionar un estudio estático, la IA procesa la composición para generar el Mapa de Calor (Heatmap) y la Ruta de Fijación Sacádica (Focus Path). En la versión 1.3.0 puede elegir diferentes proporciones de pantalla para evaluar cómo responde el diseño según la plataforma de destino:",
+        "La evaluación de vallas publicitarias, mupis digitales y pantallas en vía pública exige criterios sumamente estrictos debido a la velocidad del espectador (vehicular o peatonal):",
         currentY
       );
 
       currentY = drawInfoBox(
-        "Formatos de Pantalla y Zonas Seguras Incorporadas:",
+        "Reglas de Oro para Vallas y Mupis Exteriores (OOH):",
         [
-          "• 9:16 Vertical (Stories & Reels): Activa la superposición de Zonas Seguras para evitar que el texto o CTA queden ocultos tras la interfaz móvil de Instagram/TikTok.",
-          "• 1:1 Cuadrado (Feed): Modela la atracción simétrica en desplazamientos rápidos de feed.",
-          "• 16:9 Horizontal (Banners & YouTube): Analiza la lectura visual bajo el patrón F-shape.",
-          "• 4:5 Retrato Mobile: Evalúa el formato vertical optimizado que maximiza el tiempo de permanencia (Dwell Time)."
+          "1. REGLA DE LOS 3 SEGUNDOS EN MOVIMIENTO: El conductor o peatón dispone de un lapso máximo de 1.5 a 3 segundos para asimilar el mensaje completo antes de perder línea de visión.",
+          "2. MÁXIMO 2 ELEMENTOS FOCALES: La pieza NO debe contener más de 2 elementos dominantes (ej. Un producto llamativo + 1 titular corto de 4 a 6 palabras). Piezas con 3 o más elementos dispersos sufren un 80% de pérdida de recuerdo.",
+          "3. LEGIBILIDAD A DISTANCIA Y CONTRASTE EXTREMO: El contraste tipográfico debe cumplir la norma WCAG AAA (mínimo 7:1) para ser comprensible a 50 metros de distancia bajo luz solar directa.",
+          "4. ÍNDICE DE DESORDEN VISUAL (Clutter Index): Mide el ruido del fondo. Fondos complejos restan un 45% de efectividad a la fijación sobre la marca."
         ],
         currentY,
-        [236, 72, 153] // Pink
+        [225, 29, 72]
+      );
+
+      currentY += 2;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(15, 23, 42);
+      doc.text("3. PARÁMETROS TÉCNICOS PARA PÁGINAS WEB Y APPS MÓVILES", margin, currentY);
+
+      doc.setFillColor(16, 185, 129); // Emerald
+      doc.rect(margin, currentY + 2, 45, 1, "F");
+
+      currentY += 8;
+
+      currentY = drawInfoBox(
+        "Criterios de Escaneo Visual en Interfaces Digitales:",
+        [
+          "• PATRÓN F-PATTERN Y Z-PATTERN: En escritorios, la vista escanea en forma de 'F'. El titular principal e isotipo deben residir en el margen superior izquierdo.",
+          "• ZONA DEL PULGAR (Thumb Zone Accessibility): En pantallas móviles, los botones primarios de acción (CTA) deben situarse en el tercio inferior alcanzable de forma natural sin forzar la mano.",
+          "• CONTRASTE DE BOTÓN CTA: El botón de conversión debe ser la zona con mayor peso lumínico o cromático del lienzo para activar el clic automático."
+        ],
+        currentY,
+        [16, 185, 129]
       );
 
 
       // ==============================================================
-      // PÁGINA 3: ANÁLISIS DE VIDEO & REELS (NUEVO MÓDULO V1.3.0)
+      // PÁGINA 4: ANÁLISIS DE VIDEO, REELS & TIKTOK
       // ==============================================================
       doc.addPage();
-      drawPageBase(3, TOTAL_PAGES, "Análisis de Video, Reels & Retención CRO");
+      drawPageBase(4, TOTAL_PAGES, "Análisis de Video, Reels & TikTok");
 
       currentY = 38;
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(15, 23, 42);
-      doc.text("3. ANÁLISIS DE VIDEO & REELS CON MAPA DE CALOR TEMPORAL", margin, currentY);
+      doc.text("4. EVALUACIÓN DE VIDEOS, REELS Y TIKTOK", margin, currentY);
 
       doc.setFillColor(14, 165, 233); // Cyan
       doc.rect(margin, currentY + 2, 45, 1, "F");
@@ -274,46 +316,87 @@ export default function ManualDownloader() {
       currentY += 8;
 
       currentY = writeParagraph(
-        "El motor de video de OculiMind AI permite analizar piezas audiovisuales y Reels de cualquier duración. El sistema calcula dinámicamente el comportamiento de la atención segundo a segundo, adaptándose a la duración real del video subido por el usuario.",
+        "El módulo de video analiza dinámicamente el flujo audiovisual segundo a segundo, adaptando los requerimientos a la velocidad de consumo de redes sociales:",
         currentY
       );
 
       currentY = drawInfoBox(
-        "Componentes Clave del Análisis de Video:",
+        "Parámetros Clave para Formatos Audiovisuales Cortos (9:16):",
         [
-          "1. DESGLOSE DINÁMICO DE ESCENAS: Segmentación automática en 4 fases (Escena 1: El Gancho/Hook, Escena 2: Muestra de Producto, Escena 3: Explicación y Subtítulos, Escena 4: Cierre y Marca).",
-          "2. HEATMAP DINÁMICO SINCRONIZADO: Los puntos de fijación se desplazan en tiempo real sobre la reproducción del video según la marca de tiempo (currentTime).",
-          "3. REPORTE DE RETENCIÓN DE VIDEO: Generación de resumen semántico del video, fortalezas detectadas, puntos críticos de desgaste y recomendaciones de optimización CRO.",
-          "4. SELECTOR DE FORMATO DE VIDEO: Alterna instantáneamente entre 9:16 (Reels/TikTok), 16:9 (YouTube), 1:1 y 4:5."
+          "1. COMPRENSIÓN CON AUDIO APAGADO (Audio-Off Ratio): Más del 75% de las reproducciones en plataformas sociales ocurren en silencio. El video DEBE incluir subtítulos dinámicos de gran tamaño o texto de apoyo contextual.",
+          "2. ZONAS SEGURAS MÓVILES (Safe Zone Compliance): Verificación automatizada para evitar que texto, logos o botones queden tapados por el avatar de usuario, la descripción del post o la barra inferior de navegación.",
+          "3. DENSIDAD DE CORTES (Ritmo de Edición): Videos con cambios de toma o movimiento cada 2 a 3 segundos mantienen una retención 2.4 veces mayor que tomas estáticas continuas.",
+          "4. CURVA DE CAÍDA DE RETENCIÓN: Identificación exacta del segundo donde decae el interés para aplicar correcciones de edición o llamados a la acción tempranos."
         ],
         currentY,
-        [14, 165, 233] // Cyan
+        [14, 165, 233]
+      );
+
+
+      // ==============================================================
+      // PÁGINA 5: HUB DE ADS & MONITOR ALGORÍTMICO EN TIEMPO REAL
+      // ==============================================================
+      doc.addPage();
+      drawPageBase(5, TOTAL_PAGES, "Hub de Ads & Monitor Algorítmico Live");
+
+      currentY = 38;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(15, 23, 42);
+      doc.text("5. HUB DE ANUNCIOS META ADS, GOOGLE DISPLAY & MATRIZ DCO", margin, currentY);
+
+      doc.setFillColor(139, 92, 246); // Purple
+      doc.rect(margin, currentY + 2, 45, 1, "F");
+
+      currentY += 8;
+
+      currentY = writeParagraph(
+        "El módulo especializado en publicidad digital permite evaluar posts de Instagram, Facebook, LinkedIn y la suite completa de formatos estandarizados de Google Display Ads (Skyscraper, Leaderboard, Medium Rectangle, Billboard, etc.):",
+        currentY
+      );
+
+      currentY = drawInfoBox(
+        "Optimizaciones de Pauta y Creativos Dinámicos (DCO):",
+        [
+          "• MATRIZ DCO (Dynamic Creative Optimization): Evalúa múltiples combinaciones de imágenes, titulares y botones CTA para determinar la combinación con mayor probabilidad de conversión previa al lanzamiento.",
+          "• REGLA DEL 20% DE TEXTO EN META: Verifica que la cantidad de texto superpuesto no sobrepase el umbral que causa penalización en el costo por mil impresiones (eCPM).",
+          "• SUITE GOOGLE DISPLAY IAB: Diagnóstico de legibilidad para los 12 formatos estandarizados de la red de display de Google."
+        ],
+        currentY,
+        [139, 92, 246]
       );
 
       currentY += 2;
 
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(15, 23, 42);
+      doc.text("6. MONITOR ALGORÍTMICO EN TIEMPO REAL (ACTUALIZACIÓN AUTOMÁTICA)", margin, currentY);
+
+      doc.setFillColor(6, 182, 212); // Cyan
+      doc.rect(margin, currentY + 2, 45, 1, "F");
+
+      currentY += 8;
+
       currentY = writeParagraph(
-        "Recomendación CRO de Video: En formatos verticales (9:16), procure ubicar el elemento principal de atención o el logotipo de marca entre el 20% y el 75% de la altura de la pantalla para garantizar la máxima retención antes del scroll involuntario.",
-        currentY,
-        9,
-        [71, 85, 105],
-        "italic"
+        "OculiMind AI cuenta con un sistema integrado de actualización algorítmica. Cuando plataformas como Instagram, Meta Ads o Google Display modifican sus reglas de entrega o formatos prioritarios, el motor recarga automáticamente sus pesos de ponderación (ej. Dando mayor peso a los Guardados/Compartidos sobre los Likes tradicionales).",
+        currentY
       );
 
 
       // ==============================================================
-      // PÁGINA 4: WEBCAM EN VIVO Y EMOTION AI
+      // PÁGINA 6: NEUROMARKETING EMPÍRICO Y AUDITORÍA DE LOGOS
       // ==============================================================
       doc.addPage();
-      drawPageBase(4, TOTAL_PAGES, "Neuromarketing: Webcam Real & Emotion AI");
+      drawPageBase(6, TOTAL_PAGES, "Neuromarketing Empírico & Logo Review");
 
       currentY = 38;
 
-      // Section 4: Webcam Tracker
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(15, 23, 42);
-      doc.text("4. SEGUIMIENTO OCULAR MEDIANTE WEBCAM EN VIVO (TEST CON USUARIOS)", margin, currentY);
+      doc.text("7. SEGUIMIENTO OCULAR POR WEBCAM Y EMOTION AI", margin, currentY);
 
       doc.setFillColor(16, 185, 129); // Emerald
       doc.rect(margin, currentY + 2, 45, 1, "F");
@@ -321,100 +404,29 @@ export default function ManualDownloader() {
       currentY += 8;
 
       currentY = writeParagraph(
-        "A diferencia de las estimaciones puras por IA, el módulo 'Webcam Real' le permite recolectar datos empíricos de usuarios utilizando la cámara web de su dispositivo. El sistema aprovecha algoritmos web de estimación de malla facial (Face Mesh) para calcular los vectores de mirada relativos a la pantalla.",
+        "Mediante la cámara web del dispositivo, el módulo empírico calcula los vectores de mirada (Face Mesh) y decodifica microexpresiones faciales para registrar Agrado (Valence), Ceño Fruncido (Frustración) y Sorpresa durante la sesión de prueba.",
         currentY
       );
 
-      currentY = drawInfoBox(
-        "Protocolo Obligatorio para Pruebas de Calibración de Webcam:",
-        [
-          "1. ILUMINACIÓN: Asegúrese de tener luz frontal homogénea sobre la cara. Evite contraluces.",
-          "2. DISTANCIA: Posiciónese de manera estable a una distancia de 50 a 60 cm de la pantalla.",
-          "3. FIJACIÓN DE CALIBRACIÓN: Siga visualmente los puntos circulares rojos que se muestran en el lienzo.",
-          "4. SESIÓN: Permanezca inmóvil durante la prueba mientras observa el banner o video."
-        ],
-        currentY,
-        [16, 185, 129] // Emerald
-      );
+      currentY += 2;
 
-      currentY += 4;
-
-      // Section 5: Emotion AI
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(15, 23, 42);
-      doc.text("5. EMOTION AI: EVALUACIÓN DE MICROEXPRESIONES FACIALES", margin, currentY);
-
-      doc.setFillColor(139, 92, 246); // Purple
-      doc.rect(margin, currentY + 2, 40, 1, "F");
-
-      currentY += 8;
-
-      currentY = writeParagraph(
-        "En paralelo a las sacadas oculares, la pestaña 'Emotion AI' procesa la gesticulación facial para mapear de manera continua cuatro métricas biocognitivas:",
-        currentY
-      );
-
-      currentY = writeParagraph("• Agrado / Alegría (Valence): Mide respuestas de beneplácito o afinidad inmediata.", currentY, 9);
-      currentY = writeParagraph("• Frustración / Ceño Fruncido: Se activa cuando el texto es ilegible o los contrastes son deficientes.", currentY, 9);
-      currentY = writeParagraph("• Sorpresa / Atención Plena: Indica asombro o el impacto de un elemento con gran contraste.", currentY, 9);
-      currentY = writeParagraph("• Engagement Neto: Representa el nivel de enfoque e interés mental del usuario.", currentY, 9);
-
-
-      // ==============================================================
-      // PÁGINA 5: DASHBOARD 360, COMPARATIVA A/B Y AUDITORÍA DE LOGOS
-      // ==============================================================
-      doc.addPage();
-      drawPageBase(5, TOTAL_PAGES, "Dashboard 360°, Comparativa A/B & Logo Review");
-
-      currentY = 38;
-
-      // Section 6: Dashboard 360 & A/B Comparison
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(15, 23, 42);
-      doc.text("6. DASHBOARD 360°, SANDBOX MULTICAPA Y COMPARATIVA A/B", margin, currentY);
-
-      doc.setFillColor(225, 29, 72); // Rose
-      doc.rect(margin, currentY + 2, 40, 1, "F");
-
-      currentY += 8;
-
-      currentY = writeParagraph(
-        "El Dashboard 360° integra en un único lienzo la proyección predictiva de IA y los datos de mirada real. Además, incluye la función de Comparativa A/B para contrastar dos versiones de diseño en paralelo, midiendo cuál obtiene mayor atención de marca y menor carga cognitiva.",
-        currentY
-      );
-
-      // Section 7: Logo Review
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(15, 23, 42);
-      doc.text("7. AUDITORÍA TÉCNICA DE LOGOS (MYLOGOREVIEW.COM STYLE)", margin, currentY);
+      doc.text("8. AUDITORÍA TÉCNICA DE LOGOTIPOS Y MARCA", margin, currentY);
 
       doc.setFillColor(79, 70, 229); // Indigo
       doc.rect(margin, currentY + 2, 45, 1, "F");
 
       currentY += 8;
 
-      currentY = writeParagraph(
-        "El módulo 'IA Logo Review' evalúa de manera automática cuatro vectores fundamentales de identidad visual:",
-        currentY
-      );
-
-      currentY = writeParagraph("• Claridad Conceptual: Sencillez formal de la silueta y ausencia de ruido visual.", currentY, 8.5);
-      currentY = writeParagraph("• Originalidad de Sector: Nivel de diferenciación de color e imagotipo.", currentY, 8.5);
-      currentY = writeParagraph("• Legibilidad de Marca: Comportamiento tipográfico en escalas micro.", currentY, 8.5);
-      currentY = writeParagraph("• Adaptabilidad a Medios: Rendimiento en fondos oscuros, apps y favicones web.", currentY, 8.5);
-
-      currentY += 3;
-
       currentY = drawInfoBox(
-        "Entregables del Auditor de Logos:",
+        "Entregables de la Auditoría de Marca:",
         [
-          "1. ALERTAS TÉCNICAS: Diagnóstico de contraste y legibilidad en escala reducida.",
-          "2. PALETA DE COLOR DE MARCA: Códigos hexadecimales con verificación WCAG.",
-          "3. SIMULADORES EN VIVO: Pruebas reales en tarjetas, favicones y pantallas móviles.",
-          "4. KIT DE EXPORTACIÓN (.ZIP): Descarga automatizada de archivos de marca formateados."
+          "1. EVALUACIÓN MICRO-ESCALA: Verificación de legibilidad en favicones de 16x16px y bordados.",
+          "2. PALETA DE COLOR WCAG: Mapeo de códigos Hexadecimales y pruebas de contraste.",
+          "3. SIMULADORES EN VIVO: Mockups instantáneos en apps, tarjetas y papelería corporativa.",
+          "4. KIT DE ARCHIVOS DE MARCA: Generación y exportación de paquetes listos para producción."
         ],
         currentY,
         [79, 70, 229]

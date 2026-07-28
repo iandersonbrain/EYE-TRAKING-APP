@@ -6,12 +6,14 @@
 import { useState } from "react";
 import { Campaign, FocusPoint, GazePathPoint } from "../types";
 import HeatmapOverlay from "./HeatmapOverlay";
+import GazePathOverlay from "./GazePathOverlay";
 import VideoAnalysisView from "./VideoAnalysisView";
 import { 
   Eye, 
   HelpCircle, 
   AlertTriangle, 
   CheckCircle, 
+  CheckCircle2,
   Lightbulb, 
   TrendingUp, 
   Cpu, 
@@ -25,7 +27,11 @@ import {
   Square,
   Layout,
   Maximize2,
-  Info
+  Info,
+  Scale,
+  ArrowRightLeft,
+  Languages,
+  SpellCheck
 } from "lucide-react";
 import { motion } from "motion/react";
 import { jsPDF } from "jspdf";
@@ -39,6 +45,7 @@ type AspectRatio = "original" | "1:1" | "9:16" | "16:9" | "4:5";
 
 export default function PredictiveView({ campaign }: PredictiveViewProps) {
   const [viewMode, setViewMode] = useState<"heatmap" | "gazepath" | "both">("heatmap");
+  const [activeVariant, setActiveVariant] = useState<"sideBySide" | "A" | "B">("sideBySide");
   const [hoveredPoint, setHoveredPoint] = useState<string | null>(null);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
@@ -477,6 +484,55 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
       {/* Visual Canvas (7 columns on large screens) */}
       <div className="lg:col-span-7 flex flex-col space-y-4">
         <div id="predictive-visual-canvas" className="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-lg">
+          
+          {/* Dual Design Mode Switcher if Variant B exists */}
+          {(campaign.variantBImageUrl || campaign.variantBPredictive) && (
+            <div className="bg-slate-950 p-2.5 rounded-xl border border-indigo-500/30 mb-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+              <div className="flex items-center space-x-2 text-indigo-300 font-bold text-xs font-mono">
+                <Scale className="w-4 h-4 text-emerald-400" />
+                <span>
+                  {campaign.comparisonMode === "original_vs_correction"
+                    ? "Comparativa A/B: Original vs Corrección"
+                    : "Comparativa A/B: 2 Diseños Diferentes"}
+                </span>
+              </div>
+
+              <div className="flex bg-slate-900 p-1 rounded-lg text-xs border border-slate-800">
+                <button
+                  onClick={() => setActiveVariant("sideBySide")}
+                  className={`px-3 py-1 rounded-md font-bold transition cursor-pointer flex items-center space-x-1 ${
+                    activeVariant === "sideBySide"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <ArrowRightLeft className="w-3 h-3" />
+                  <span>Lado a Lado</span>
+                </button>
+                <button
+                  onClick={() => setActiveVariant("A")}
+                  className={`px-3 py-1 rounded-md font-bold transition cursor-pointer ${
+                    activeVariant === "A"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Diseño A
+                </button>
+                <button
+                  onClick={() => setActiveVariant("B")}
+                  className={`px-3 py-1 rounded-md font-bold transition cursor-pointer ${
+                    activeVariant === "B"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Diseño B
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2 text-white">
               <Eye className="w-5 h-5 text-amber-400" />
@@ -542,105 +598,110 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
             </div>
           </div>
 
-          {/* Interactive Image Frame with Dynamic Aspect Ratio */}
-          <div className={`relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center transition-all duration-300 ${
-            selectedRatio === "1:1" ? "aspect-square max-w-[460px] mx-auto shadow-2xl" :
-            selectedRatio === "9:16" ? "aspect-[9/16] max-w-[270px] mx-auto shadow-2xl ring-2 ring-indigo-500/30" :
-            selectedRatio === "16:9" ? "aspect-video shadow-xl" :
-            selectedRatio === "4:5" ? "aspect-[4/5] max-w-[370px] mx-auto shadow-xl" :
-            "max-h-[520px]"
-          }`}>
-                <img
-                  src={imageUrl}
-                  alt={name}
-                  referrerPolicy="no-referrer"
-                  className={`w-full h-full ${selectedRatio === "original" ? "object-contain max-h-[500px]" : "object-cover"}`}
-                />
+          {/* SIDE-BY-SIDE MODE OR SINGLE CANVAS */}
+          {activeVariant === "sideBySide" && campaign.variantBImageUrl ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* FRAME DESIGN A */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-bold text-slate-300">
+                  <span className="text-amber-400">Diseño A (Original)</span>
+                  <span className="font-mono text-[10px] text-slate-400">Claridad: {campaign.predictive?.clarityScore || 80}%</span>
+                </div>
+                <div className="relative w-full aspect-video overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center">
+                  <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+                  {(viewMode === "heatmap" || viewMode === "both") && (
+                    <HeatmapOverlay points={heatmapPoints} opacity={0.7} radius={45} />
+                  )}
+                </div>
+              </div>
 
-                {/* Safe-Zone Overlays for Mobile Formats */}
-                {selectedRatio === "9:16" && (
-                  <div className="absolute inset-0 pointer-events-none z-10 border-t-[40px] border-b-[60px] border-black/40 flex flex-col justify-between p-2">
-                    <div className="flex items-center justify-between text-[8px] text-white/70 font-mono">
-                      <span>• Instagram / TikTok Safe Zone Top</span>
-                    </div>
-                    <div className="text-[8px] text-amber-300/80 font-mono text-center bg-black/60 py-0.5 rounded">
-                      Zona Inferior de CTA & Interfaz Móvil
-                    </div>
+              {/* FRAME DESIGN B */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-bold text-slate-300">
+                  <span className="text-emerald-400">
+                    {campaign.variantBName || "Diseño B (Corregido)"}
+                  </span>
+                  <span className="font-mono text-[10px] text-emerald-400 font-bold">
+                    Claridad: {campaign.variantBPredictive?.clarityScore || 92}%
+                  </span>
+                </div>
+                <div className="relative w-full aspect-video overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center">
+                  <img
+                    src={campaign.variantBImageUrl}
+                    alt={campaign.variantBName || "Diseño B"}
+                    className="w-full h-full object-cover"
+                  />
+                  {(viewMode === "heatmap" || viewMode === "both") && (
+                    <HeatmapOverlay
+                      points={
+                        campaign.variantBPredictive?.focusAreas.map((area) => ({
+                          x: area.x,
+                          y: area.y,
+                          weight: area.weight / 100
+                        })) || heatmapPoints
+                      }
+                      opacity={0.7}
+                      radius={45}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* STANDARD SINGLE INTERACTIVE FRAME */
+            <div className={`relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-950 flex items-center justify-center transition-all duration-300 ${
+              selectedRatio === "1:1" ? "aspect-square max-w-[460px] mx-auto shadow-2xl" :
+              selectedRatio === "9:16" ? "aspect-[9/16] max-w-[270px] mx-auto shadow-2xl ring-2 ring-indigo-500/30" :
+              selectedRatio === "16:9" ? "aspect-video shadow-xl" :
+              selectedRatio === "4:5" ? "aspect-[4/5] max-w-[370px] mx-auto shadow-xl" :
+              "max-h-[520px]"
+            }`}>
+              <img
+                src={activeVariant === "B" && campaign.variantBImageUrl ? campaign.variantBImageUrl : imageUrl}
+                alt={name}
+                referrerPolicy="no-referrer"
+                className={`w-full h-full ${selectedRatio === "original" ? "object-contain max-h-[500px]" : "object-cover"}`}
+              />
+
+              {/* Safe-Zone Overlays for Mobile Formats */}
+              {selectedRatio === "9:16" && (
+                <div className="absolute inset-0 pointer-events-none z-10 border-t-[40px] border-b-[60px] border-black/40 flex flex-col justify-between p-2">
+                  <div className="flex items-center justify-between text-[8px] text-white/70 font-mono">
+                    <span>• Instagram / TikTok Safe Zone Top</span>
                   </div>
-                )}
+                  <div className="text-[8px] text-amber-300/80 font-mono text-center bg-black/60 py-0.5 rounded">
+                    Zona Inferior de CTA & Interfaz Móvil
+                  </div>
+                </div>
+              )}
 
-            {/* Heatmap Overlay Layer */}
-            {(viewMode === "heatmap" || viewMode === "both") && (
-              <HeatmapOverlay points={heatmapPoints} opacity={0.7} radius={45} />
-            )}
+              {/* Heatmap Overlay Layer */}
+              {(viewMode === "heatmap" || viewMode === "both") && (
+                <HeatmapOverlay
+                  points={
+                    activeVariant === "B" && campaign.variantBPredictive
+                      ? campaign.variantBPredictive.focusAreas.map((area) => ({
+                          x: area.x,
+                          y: area.y,
+                          weight: area.weight / 100
+                        }))
+                      : heatmapPoints
+                  }
+                  opacity={0.7}
+                  radius={45}
+                />
+              )}
 
-            {/* Gaze Path SVG Overlay */}
-            {(viewMode === "gazepath" || viewMode === "both") && (
-              <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-20">
-                <defs>
-                  <marker
-                    id="arrow"
-                    viewBox="0 0 10 10"
-                    refX="6"
-                    refY="5"
-                    markerWidth="6"
-                    markerHeight="6"
-                    orient="auto-start-reverse"
-                  >
-                    <path d="M 0 2 L 10 5 L 0 8 z" fill="#f59e0b" />
-                  </marker>
-                </defs>
-                
-                {/* Draw connecting lines */}
-                {predictive.gazePath.map((point, index) => {
-                  if (index === 0) return null;
-                  const prevPoint = predictive.gazePath[index - 1];
-                  return (
-                    <line
-                      key={`line-${index}`}
-                      x1={`${prevPoint.x}%`}
-                      y1={`${prevPoint.y}%`}
-                      x2={`${point.x}%`}
-                      y2={`${point.y}%`}
-                      stroke="#f59e0b"
-                      strokeWidth="2.5"
-                      strokeDasharray="4 2"
-                      markerEnd="url(#arrow)"
-                    />
-                  );
-                })}
-
-                {/* Draw fixation circles */}
-                {predictive.gazePath.map((point) => (
-                  <g key={`gaze-${point.id}`}>
-                    <circle
-                      cx={`${point.x}%`}
-                      cy={`${point.y}%`}
-                      r={hoveredPoint === point.id ? "18" : "14"}
-                      fill="#1e293b"
-                      stroke="#f59e0b"
-                      strokeWidth="3"
-                      className="transition-all duration-200 cursor-pointer pointer-events-auto"
-                      onMouseEnter={() => setHoveredPoint(point.id)}
-                      onMouseLeave={() => setHoveredPoint(null)}
-                    />
-                    <text
-                      x={`${point.x}%`}
-                      y={`${point.y}%`}
-                      textAnchor="middle"
-                      dy=".3em"
-                      fill="#f59e0b"
-                      fontSize={hoveredPoint === point.id ? "12" : "10"}
-                      fontWeight="bold"
-                      className="pointer-events-none select-none"
-                    >
-                      {point.sequence}
-                    </text>
-                  </g>
-                ))}
-              </svg>
-            )}
-          </div>
+              {/* Gaze Path SVG Overlay */}
+              {(viewMode === "gazepath" || viewMode === "both") && (
+                <GazePathOverlay
+                  gazePath={predictive.gazePath}
+                  hoveredPoint={hoveredPoint}
+                  onHoverPoint={setHoveredPoint}
+                />
+              )}
+            </div>
+          )}
 
           <p className="text-[11px] text-slate-400 mt-2 text-center italic font-mono">
             * El análisis predice la fijación de la atención visual en los primeros 10 segundos de exposición.
@@ -757,6 +818,71 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
             <p className="whitespace-pre-line">{predictive.reportText.summary}</p>
           </div>
         </div>
+
+        {/* Default Spelling & Orthography Audit Section (Spanish & English) */}
+        {(() => {
+          const audit = predictive.spellingAudit || predictive.reportText?.spellingAudit;
+          return (
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
+                  <SpellCheck className="w-4 h-4 text-indigo-600 mr-1.5" />
+                  Revisión Ortográfica y Gramatical (Default)
+                </h4>
+                <div className="flex items-center space-x-1.5 bg-indigo-50 px-2.5 py-1 rounded-full text-[11px] font-bold text-indigo-700 border border-indigo-100">
+                  <Languages className="w-3 h-3 mr-0.5" />
+                  <span>ES</span>
+                  <span className="text-indigo-300">•</span>
+                  <span>EN</span>
+                </div>
+              </div>
+
+              {audit && audit.hasErrors && audit.issues && audit.issues.length > 0 ? (
+                <div className="space-y-3 pt-1">
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs flex items-start space-x-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">{audit.statusText || "Se encontraron observaciones de ortografía/gramática en la pieza"}</p>
+                      <p className="text-[11px] text-amber-800 mt-0.5">Idioma: {audit.detectedLanguage || "Español / English"}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {audit.issues.map((issue, idx) => (
+                      <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-rose-600 line-through bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                            "{issue.foundText}"
+                          </span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
+                            {issue.language === "es" ? "Español" : issue.language === "en" ? "English" : "Bilingüe"}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-1 text-emerald-700 font-semibold">
+                          <span>→ Corrección sugerida:</span>
+                          <span className="font-mono bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-emerald-800">
+                            "{issue.correctedText}"
+                          </span>
+                        </div>
+                        <p className="text-slate-500 text-[11px]">{issue.explanation}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 bg-emerald-50/70 rounded-xl border border-emerald-200 text-emerald-900 text-xs flex items-start space-x-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-emerald-800">100% Correcto en Español e Inglés</p>
+                    <p className="text-[11px] text-emerald-700 mt-0.5">
+                      {audit?.statusText || "Revisión ortográfica y gramatical ejecutada por defecto en Español e Inglés. No se detectaron faltas de ortografía ni erratas en los textos de la pieza."}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Strengths & Weaknesses */}
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">

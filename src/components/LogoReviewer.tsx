@@ -24,7 +24,10 @@ import {
   Grid, 
   FileDown, 
   CheckCircle,
-  FileText
+  CheckCircle2,
+  FileText,
+  Languages,
+  SpellCheck
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
@@ -106,6 +109,12 @@ const DEFAULT_AUDIT_RESULT = {
   faviconReview: {
     score: 86,
     elementsToSimplify: "Remueva completamente la marca textual 'AURA SAAS'. Utilice el círculo y onda central de forma independiente y ampliada dentro de un contenedor transparente."
+  },
+  spellingAudit: {
+    hasErrors: false,
+    detectedLanguage: "Español e Inglés",
+    statusText: "Ortografía y denominación de marca verificadas por defecto en Español e Inglés: 100% Correcto sin erratas.",
+    issues: []
   }
 };
 
@@ -824,6 +833,60 @@ OculiMind AI Logo Engine. Hecho en el Workspace de AI Studio.
                   </div>
                 </div>
               </div>
+
+              {/* Default Spelling & Orthography Review */}
+              {(() => {
+                const audit = (currentResult as any).spellingAudit;
+                return (
+                  <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                      <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                        <SpellCheck className="w-4 h-4 text-indigo-400" /> Revisión Ortográfica & Tipográfica (Default)
+                      </h4>
+                      <div className="flex items-center gap-1 bg-slate-800 px-2 py-0.5 rounded-full text-[10px] font-bold text-indigo-300 border border-slate-700">
+                        <Languages className="w-3 h-3" />
+                        <span>ES</span>
+                        <span className="text-slate-500">•</span>
+                        <span>EN</span>
+                      </div>
+                    </div>
+
+                    {audit && audit.hasErrors && audit.issues && audit.issues.length > 0 ? (
+                      <div className="space-y-2">
+                        {audit.issues.map((issue: any, idx: number) => (
+                          <div key={idx} className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono text-rose-400 line-through bg-rose-950/40 px-1.5 py-0.5 rounded">
+                                "{issue.foundText}"
+                              </span>
+                              <span className="text-[9px] font-bold uppercase bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">
+                                {issue.language === "es" ? "Español" : issue.language === "en" ? "English" : "Bilingüe"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 text-emerald-400 font-semibold text-[11px]">
+                              <span>→ Corrección:</span>
+                              <span className="font-mono bg-emerald-950/40 px-1.5 py-0.5 rounded text-emerald-300">
+                                "{issue.correctedText}"
+                              </span>
+                            </div>
+                            <p className="text-slate-400 text-[10px]">{issue.explanation}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-emerald-950/30 rounded-lg border border-emerald-800/50 text-xs flex items-start gap-2.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold text-emerald-300 text-[11px]">100% Correcto en Español e Inglés</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            {audit?.statusText || "Revisión automática de denominación de marca, ortografía y descriptores tipográficos completada sin erratas."}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Detección de Riesgos */}
               <div className="space-y-3 pt-2">

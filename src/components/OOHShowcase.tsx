@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import HeatmapOverlay from "./HeatmapOverlay";
 import { 
   Car, 
   Store, 
@@ -285,33 +286,32 @@ export default function OOHShowcase({ onTestDesign }: OOHShowcaseProps) {
                   {showHeatmap && (
                     <div className="absolute inset-0 pointer-events-none z-20">
                       {designState === "before" ? (
-                        /* Scattered, noisy heatmaps (failed attention) */
-                        <>
-                          <div className="absolute top-[35%] left-[25%] w-24 h-24 bg-rose-500/30 rounded-full blur-xl animate-pulse" />
-                          <div className="absolute top-[40%] right-[30%] w-20 h-20 bg-amber-500/30 rounded-full blur-lg" />
-                          <div className="absolute bottom-[20%] left-[45%] w-16 h-16 bg-yellow-500/20 rounded-full blur-md" />
-                          <div className="absolute top-[15%] right-[10%] w-12 h-12 bg-blue-500/20 rounded-full blur-md" />
-                          {/* Scattered gaze dots */}
-                          <div className="absolute top-[40%] left-[28%] w-3 h-3 bg-rose-500 rounded-full border border-white shadow-xs" />
-                          <div className="absolute top-[48%] right-[32%] w-3 h-3 bg-amber-500 rounded-full border border-white shadow-xs" />
-                          <div className="absolute bottom-[25%] left-[48%] w-3 h-3 bg-yellow-400 rounded-full border border-white shadow-xs" />
-                        </>
+                        <HeatmapOverlay 
+                          points={[
+                            { x: 28, y: 38, weight: 0.5 },
+                            { x: 68, y: 42, weight: 0.4 },
+                            { x: 48, y: 78, weight: 0.3 },
+                            { x: 88, y: 18, weight: 0.2 },
+                          ]}
+                          opacity={0.65}
+                          radius={35}
+                        />
                       ) : (
-                        /* Concentrated, high-efficiency heatmaps on key targets */
                         <>
-                          {/* Phone Number Hotspot */}
-                          <div className="absolute top-[42%] left-[22%] w-28 h-20 bg-rose-600/60 rounded-full blur-xl" />
-                          <div className="absolute top-[46%] left-[24%] w-16 h-10 bg-yellow-400/80 rounded-full blur-md" />
-                          
-                          {/* Logo Hotspot */}
-                          <div className="absolute top-[38%] right-[20%] w-24 h-20 bg-rose-600/55 rounded-full blur-xl" />
-                          <div className="absolute top-[42%] right-[22%] w-12 h-10 bg-yellow-300/80 rounded-full blur-md" />
+                          <HeatmapOverlay 
+                            points={[
+                              { x: 24, y: 44, weight: 0.95 }, // Main Phone CTA
+                              { x: 78, y: 40, weight: 0.88 }, // Brand Logo
+                            ]}
+                            opacity={0.75}
+                            radius={45}
+                          />
 
                           {/* Order Sequence Markers */}
-                          <div className="absolute top-[42%] left-[20%] w-6 h-6 bg-rose-600 text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                          <div className="absolute top-[42%] left-[20%] w-6 h-6 bg-rose-600 text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md z-30">
                             1
                           </div>
-                          <div className="absolute top-[38%] right-[18%] w-6 h-6 bg-amber-500 text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                          <div className="absolute top-[38%] right-[18%] w-6 h-6 bg-amber-500 text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md z-30">
                             2
                           </div>
                         </>
@@ -500,16 +500,25 @@ export default function OOHShowcase({ onTestDesign }: OOHShowcaseProps) {
                     {showHeatmap && (
                       <div className="absolute inset-0 pointer-events-none z-20">
                         {designState === "before" ? (
-                          <>
-                            <div className="absolute top-[20%] left-[15%] w-16 h-16 bg-rose-500/30 rounded-full blur-md" />
-                            <div className="absolute top-[20%] right-[15%] w-16 h-16 bg-amber-500/30 rounded-full blur-md" />
-                            <div className="absolute bottom-[20%] left-[40%] w-16 h-16 bg-blue-500/30 rounded-full blur-md" />
-                          </>
+                          <HeatmapOverlay 
+                            points={[
+                              { x: 20, y: 20, weight: 0.4 },
+                              { x: 80, y: 20, weight: 0.4 },
+                              { x: 50, y: 80, weight: 0.3 },
+                            ]}
+                            opacity={0.65}
+                            radius={35}
+                          />
                         ) : (
                           <>
-                            <div className="absolute top-[35%] left-[30%] w-44 h-24 bg-rose-600/60 rounded-full blur-xl" />
-                            <div className="absolute top-[40%] left-[40%] w-20 h-12 bg-yellow-300/80 rounded-full blur-md" />
-                            <div className="absolute top-[38%] left-[38%] w-6 h-6 bg-rose-600 text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                            <HeatmapOverlay 
+                              points={[
+                                { x: 50, y: 40, weight: 0.98 },
+                              ]}
+                              opacity={0.75}
+                              radius={50}
+                            />
+                            <div className="absolute top-[38%] left-[38%] w-6 h-6 bg-rose-600 text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md z-30">
                               1
                             </div>
                           </>
@@ -688,15 +697,24 @@ export default function OOHShowcase({ onTestDesign }: OOHShowcaseProps) {
                       {showHeatmap && (
                         <div className="absolute inset-0 pointer-events-none z-20">
                           {designState === "before" ? (
-                            <>
-                              <div className="absolute top-[30%] -left-4 w-12 h-16 bg-rose-500/40 rounded-full blur-md" />
-                              <div className="absolute top-[40%] -right-4 w-12 h-16 bg-rose-500/40 rounded-full blur-md" />
-                            </>
+                            <HeatmapOverlay 
+                              points={[
+                                { x: 10, y: 35, weight: 0.5 },
+                                { x: 90, y: 45, weight: 0.5 },
+                              ]}
+                              opacity={0.65}
+                              radius={30}
+                            />
                           ) : (
                             <>
-                              <div className="absolute top-[35%] left-[20%] w-28 h-20 bg-rose-600/60 rounded-full blur-xl" />
-                              <div className="absolute top-[40%] left-[30%] w-12 h-10 bg-yellow-300/80 rounded-full blur-md" />
-                              <div className="absolute top-[38%] left-[25%] w-6 h-6 bg-rose-600 text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                              <HeatmapOverlay 
+                                points={[
+                                  { x: 35, y: 40, weight: 0.95 },
+                                ]}
+                                opacity={0.75}
+                                radius={45}
+                              />
+                              <div className="absolute top-[38%] left-[25%] w-6 h-6 bg-rose-600 text-white font-mono text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md z-30">
                                 1
                               </div>
                             </>

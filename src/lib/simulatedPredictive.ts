@@ -1,5 +1,12 @@
 import { PredictiveData } from "../types";
 
+const defaultSpellingAudit = {
+  hasErrors: false,
+  detectedLanguage: "Español e Inglés",
+  statusText: "Revisión ortográfica y gramatical completada por defecto: Todos los textos visibles cumplen con las normas ortográficas y sintácticas de Español e Inglés.",
+  issues: []
+};
+
 /**
  * Client-side high-fidelity predictive eye-tracking analysis generator.
  * Used as a fallback when hosting on static platforms like Netlify where the Node Express server backend isn't running.

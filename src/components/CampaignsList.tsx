@@ -6,7 +6,7 @@
 import React, { useState, useRef } from "react";
 import { Campaign } from "../types";
 import { campaignPresets } from "../campaignPresets";
-import { Plus, Image as ImageIcon, Trash2, Calendar, FileText, ChevronRight, UploadCloud, Cpu, AlertCircle, Frame, Megaphone, ShoppingCart, Package, Globe, Smartphone, Video, Sparkles, Car, Store, Eye } from "lucide-react";
+import { Plus, Image as ImageIcon, Trash2, Calendar, FileText, ChevronRight, UploadCloud, Cpu, AlertCircle, Frame, Megaphone, ShoppingCart, Package, Globe, Smartphone, Video, Sparkles, Car, Store, Eye, Scale, ArrowRightLeft, CheckCircle2 } from "lucide-react";
 import OOHShowcase from "./OOHShowcase";
 
 interface CampaignsListProps {
@@ -17,7 +17,7 @@ interface CampaignsListProps {
   onDeleteCampaign: (id: string) => void;
   onAnalyzeCampaign: (id: string, campaignData?: Campaign) => Promise<void>;
   isAnalyzing: boolean;
-  onNavigateTab?: (tab: "list" | "predictive" | "webcam" | "emotions" | "dashboard360" | "logoReview") => void;
+  onNavigateTab?: (tab: "list" | "predictive" | "webcam" | "emotions" | "dashboard360" | "logoReview" | "adsOptimizer") => void;
 }
 
 export default function CampaignsList({
@@ -33,9 +33,9 @@ export default function CampaignsList({
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
 
   const handleSelectToolCategory = (category: string) => {
-    if (category === "logoReview") {
+    if (category === "logoReview" || category === "adsOptimizer") {
       if (onNavigateTab) {
-        onNavigateTab("logoReview");
+        onNavigateTab(category);
       }
       return;
     }
@@ -53,10 +53,14 @@ export default function CampaignsList({
     }
   };
   const [newCampaign, setNewCampaign] = useState({ name: "", description: "", category: "keyvisual" });
+  const [comparisonMode, setComparisonMode] = useState<'single' | 'original_vs_correction' | 'two_different_designs'>('single');
   const [videoUrl, setVideoUrl] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageName, setImageName] = useState<string>("");
+  const [selectedImageB, setSelectedImageB] = useState<string | null>(null);
+  const [imageNameB, setImageNameB] = useState<string>("");
+  const [variantBName, setVariantBName] = useState<string>("");
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isFileLoading, setIsFileLoading] = useState<boolean>(false);
@@ -64,6 +68,22 @@ export default function CampaignsList({
   const [presentationSlides, setPresentationSlides] = useState<{ id: string; slideNumber: number; name: string; imageUrl: string }[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRefB = useRef<HTMLInputElement | null>(null);
+
+  const handleUploadFileB = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setError("Por favor, selecciona un archivo de imagen válido para la opción B.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setSelectedImageB(e.target.result as string);
+        setImageNameB(file.name);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const getUploadInstructions = () => {
     const category = newCampaign.category;
@@ -398,6 +418,11 @@ export default function CampaignsList({
       isPreset: false,
       status: "pending",
       category: newCampaign.category as any,
+      comparisonMode: comparisonMode,
+      variantBImageUrl: comparisonMode !== 'single' ? (selectedImageB || undefined) : undefined,
+      variantBName: comparisonMode !== 'single' 
+        ? (variantBName.trim() || (comparisonMode === 'original_vs_correction' ? "Diseño B (Versión Corregida)" : "Diseño B (Opción Alternative)")) 
+        : undefined,
       videoUrl: (newCampaign.category === "video" || newCampaign.category === "tiktok") ? (videoUrl.trim() || "https://assets.mixkit.co/videos/preview/mixkit-cold-drink-with-lemon-and-mint-leaves-42358-large.mp4") : undefined,
       areasOfInterest: [
         { id: "aoi-h1", name: "Zona Titular Superior", x: 50, y: 25, width: 60, height: 15 },
@@ -450,9 +475,13 @@ export default function CampaignsList({
     
     // Reset form
     setNewCampaign({ name: "", description: "", category: "keyvisual" });
+    setComparisonMode("single");
     setVideoUrl("");
     setSelectedImage(null);
     setImageName("");
+    setSelectedImageB(null);
+    setImageNameB("");
+    setVariantBName("");
     setPresentationSlides([]);
     setShowAddForm(false);
 
@@ -557,17 +586,88 @@ export default function CampaignsList({
                   onChange={(e) => setNewCampaign(prev => ({ ...prev, category: e.target.value }))}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition cursor-pointer font-medium"
                 >
-                  <option value="keyvisual">Cartel / Póster / Keyvisual</option>
+                  <option value="keyvisual">Cartel / Póster / Keyvisual 🖼️</option>
                   <option value="banner">Banner Publicitario / Anuncio Display 📢</option>
-                  <option value="supermarket">Estante de Supermercado / Góndola (Planograma)</option>
-                  <option value="packaging">Diseño de Etiquetas & Empaques (Forma, Colores, Logos)</option>
-                  <option value="landing">Página Web / Landing Page</option>
-                  <option value="fintech">Interfaz de Aplicación (App UX)</option>
+                  <option value="supermarket">Estante de Supermercado / Góndola (Planograma) 🛒</option>
+                  <option value="packaging">Diseño de Etiquetas & Empaques (Forma, Colores) 📦</option>
+                  <option value="landing">Página Web / Landing Page 🌐</option>
+                  <option value="fintech">Interfaz de Aplicación (App UX) 📱</option>
                   <option value="video">Anuncio en Video / Comercial de TV 📹</option>
                   <option value="tiktok">Reels / TikTok / Shorts (Video Vertical 9:16) 📱</option>
                   <option value="presentation">Presentación Comercial / Reporte PDF 📄</option>
                 </select>
               </div>
+
+              {/* Mode Selector for Dual Design Comparison */}
+              <div className="space-y-1.5 pt-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Modo de Evaluación de Diseños
+                </label>
+                <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setComparisonMode("single")}
+                    className={`px-2 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex flex-col items-center text-center cursor-pointer ${
+                      comparisonMode === "single"
+                        ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Eye className="w-3.5 h-3.5 mb-1" />
+                    <span>1 Diseño</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setComparisonMode("original_vs_correction")}
+                    className={`px-2 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex flex-col items-center text-center cursor-pointer ${
+                      comparisonMode === "original_vs_correction"
+                        ? "bg-white text-emerald-600 shadow-xs border border-slate-200"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Scale className="w-3.5 h-3.5 mb-1 text-emerald-500" />
+                    <span>Original vs Corrección</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setComparisonMode("two_different_designs")}
+                    className={`px-2 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex flex-col items-center text-center cursor-pointer ${
+                      comparisonMode === "two_different_designs"
+                        ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <ArrowRightLeft className="w-3.5 h-3.5 mb-1 text-indigo-500" />
+                    <span>2 Diferentes</span>
+                  </button>
+                </div>
+              </div>
+
+              {comparisonMode !== "single" && (
+                <div className="p-3 bg-indigo-50/60 rounded-2xl border border-indigo-100 space-y-2">
+                  <label className="block text-xs font-bold text-indigo-900 uppercase tracking-wider">
+                    {comparisonMode === "original_vs_correction"
+                      ? "Etiqueta de la Versión Corregida (Diseño B)"
+                      : "Nombre de la Propuesta / Opción B"}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={
+                      comparisonMode === "original_vs_correction"
+                        ? "Ej: Propuesta B - Botón rojo y texto con más contraste"
+                        : "Ej: Opción 2 - Estilo Fotográfico / Competidor"
+                    }
+                    value={variantBName}
+                    onChange={(e) => setVariantBName(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                  <p className="text-[10px] text-indigo-700">
+                    * El sistema analizará ambos archivos simultáneamente con IA y mostrará mapas de calor y puntuaciones comparativas lado a lado.
+                  </p>
+                </div>
+              )}
 
               {(newCampaign.category === "video" || newCampaign.category === "tiktok") && (
                 <div className="mt-4">
@@ -712,6 +812,72 @@ export default function CampaignsList({
                 )}
               </div>
 
+              {/* Upload Zone for Design B when comparisonMode is enabled */}
+              {comparisonMode !== "single" && (
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span>
+                      {comparisonMode === "original_vs_correction"
+                        ? "2. Cargar Diseño B (Versión Corregida) *"
+                        : "2. Cargar Diseño B (Propuesta 2 / Competidor) *"}
+                    </span>
+                    {selectedImageB && (
+                      <span className="text-[10px] font-mono text-emerald-600 flex items-center font-bold">
+                        <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" />
+                        Imagen B Lista
+                      </span>
+                    )}
+                  </label>
+
+                  {selectedImageB ? (
+                    <div className="relative aspect-video w-full rounded-2xl border border-indigo-200 bg-indigo-50/20 overflow-hidden flex items-center justify-center p-2">
+                      <img
+                        src={selectedImageB}
+                        alt="Selected mockup B preview"
+                        className="max-h-[160px] w-auto object-contain rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedImageB(null);
+                          setImageNameB("");
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-slate-900/80 hover:bg-slate-900 text-white rounded-full transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-indigo-900/90 text-white px-2.5 py-1 rounded text-[10px] font-mono max-w-[80%] truncate">
+                        Diseño B: {imageNameB || "Archivo cargado"}
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRefB.current?.click()}
+                      className="aspect-video w-full border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-indigo-50/30 rounded-2xl flex flex-col items-center justify-center p-4 text-center cursor-pointer transition"
+                    >
+                      <input
+                        ref={fileInputRefB}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleUploadFileB(e.target.files[0]);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <UploadCloud className="w-8 h-8 text-indigo-400 mb-1.5" />
+                      <span className="text-xs font-bold text-indigo-900">
+                        {comparisonMode === "original_vs_correction"
+                          ? "Haz clic para subir la versión corregida u optimizada"
+                          : "Haz clic para subir la segunda opción o diseño de la competencia"}
+                      </span>
+                      <span className="text-[10px] text-slate-500 mt-0.5">Soporta PNG, JPG, WEBP de hasta 30MB</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {error && (
                 <div className="flex items-center space-x-1.5 text-xs text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-100 mt-3">
                   <AlertCircle className="w-4 h-4 shrink-0" />
@@ -833,20 +999,30 @@ export default function CampaignsList({
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleSelectToolCategory("banner")}
+                      className="px-3 py-1.5 bg-slate-700 hover:bg-indigo-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Analizar Banner
+                    </button>
+                    <button
+                      onClick={() => handleFilterCategory("banner")}
+                      className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                      title="Ver estudios de banners"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
                   <button
-                    onClick={() => handleSelectToolCategory("banner")}
-                    className="px-3 py-1.5 bg-slate-700 hover:bg-indigo-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                    onClick={() => handleSelectToolCategory("adsOptimizer")}
+                    className="w-full py-1.5 bg-cyan-600/90 hover:bg-cyan-500 text-white text-[11px] font-bold rounded-lg transition flex items-center justify-center space-x-1.5"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    Analizar Banner
-                  </button>
-                  <button
-                    onClick={() => handleFilterCategory("banner")}
-                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
-                    title="Ver estudios de banners"
-                  >
-                    <ChevronRight className="w-4 h-4" />
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+                    <span>Hub A/B, DCO & Formatos Google</span>
                   </button>
                 </div>
               </div>
@@ -1219,7 +1395,14 @@ export default function CampaignsList({
                       {camp.status === "ready" ? "Estudio Activo" : "Pendiente de IA"}
                     </div>
 
-                    {camp.isPreset && (
+                    {(camp.variantBImageUrl || (camp.comparisonMode && camp.comparisonMode !== "single")) && (
+                      <div className="absolute top-2 right-2 bg-gradient-to-r from-emerald-600 to-indigo-600 text-white px-2 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider uppercase font-mono z-20 shadow-sm flex items-center gap-1">
+                        <Scale className="w-2.5 h-2.5" />
+                        <span>Comparativa A/B</span>
+                      </div>
+                    )}
+
+                    {camp.isPreset && !camp.variantBImageUrl && (
                       <div className="absolute top-2 right-2 bg-indigo-500 text-white px-2 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase font-mono z-20">
                         Preset Demo
                       </div>
