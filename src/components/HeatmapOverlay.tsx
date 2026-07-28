@@ -55,14 +55,18 @@ export default function HeatmapOverlay({
       if (!tempCtx) return;
 
       // 1. Draw grayscale radial masks where brightness represents intensity
+      // Using globalCompositeOperation = 'lighter' (or additive blending) for proper heat accumulation
+      tempCtx.globalCompositeOperation = "lighter";
+
       points.forEach((point) => {
         const { px, py } = mapPointToContentPixels(point.x, point.y, contentRect);
-        const r = radius * (0.5 + point.weight * 0.8);
+        const r = radius * (0.6 + point.weight * 0.9);
 
         const grad = tempCtx.createRadialGradient(px, py, 1, px, py, r);
-        // Grayscale gradient representing density
-        const alpha = point.weight * 0.8;
-        grad.addColorStop(0, `rgba(0, 0, 0, ${alpha})`);
+        // Alpha represents heat accumulation density (up to 1.0)
+        const centerAlpha = Math.min(1.0, point.weight * 1.0);
+        grad.addColorStop(0, `rgba(0, 0, 0, ${centerAlpha})`);
+        grad.addColorStop(0.5, `rgba(0, 0, 0, ${centerAlpha * 0.5})`);
         grad.addColorStop(1, "rgba(0, 0, 0, 0)");
 
         tempCtx.fillStyle = grad;
@@ -71,7 +75,12 @@ export default function HeatmapOverlay({
         tempCtx.fill();
       });
 
-      // 2. Map grayscale values to thermal color map on main canvas
+      // 2. Map accumulated intensity to a vibrant Thermal Heatmap Palette:
+      // High (1.0) -> ROJO INTENSO (#FF0000)
+      // High-Mid (0.75) -> NARANJA VIVO (#FF6600)
+      // Mid (0.50) -> AMARILLO BRILLANTE (#FFFF00)
+      // Low-Mid (0.25) -> VERDE NEÓN (#00FF66)
+      // Low (0.05) -> AZUL/CIAN (#0088FF)
       const imgData = tempCtx.getImageData(0, 0, width, height);
       const data = imgData.data;
 
@@ -79,38 +88,51 @@ export default function HeatmapOverlay({
         const alpha = data[i + 3];
 
         if (alpha > 0) {
-          const intensity = alpha / 255;
+          // Normalize intensity (0 to 1)
+          const intensity = Math.min(1.0, alpha / 220); // Scale so intense spots reach 1.0 easily
 
           let r = 0;
           let g = 0;
           let b = 0;
 
-          if (intensity < 0.25) {
-            const ratio = intensity / 0.25;
-            r = 0;
-            g = Math.floor(ratio * 255);
-            b = 255;
-          } else if (intensity < 0.5) {
-            const ratio = (intensity - 0.25) / 0.25;
-            r = 0;
-            g = 255;
-            b = Math.floor((1 - ratio) * 255);
-          } else if (intensity < 0.75) {
-            const ratio = (intensity - 0.5) / 0.25;
+          if (intensity >= 0.8) {
+            // 0.8 - 1.0: ROJO INTENSO A ROJO PURO
+            const ratio = (intensity - 0.8) / 0.2;
+            r = 255;
+            g = Math.floor((1 - ratio) * 80); // 80 -> 0 (Pure Red)
+            b = 0;
+          } else if (intensity >= 0.55) {
+            // 0.55 - 0.8: NARANJA A ROJO-NARANJA
+            const ratio = (intensity - 0.55) / 0.25;
+            r = 255;
+            g = Math.floor(255 - ratio * 175); // 255 (Yellow) -> 80 (Orange-Red)
+            b = 0;
+          } else if (intensity >= 0.35) {
+            // 0.35 - 0.55: VERDE-AMARILLO A AMARILLO
+            const ratio = (intensity - 0.35) / 0.20;
             r = Math.floor(ratio * 255);
             g = 255;
             b = 0;
+          } else if (intensity >= 0.15) {
+            // 0.15 - 0.35: AZUL-VERDE A VERDE
+            const ratio = (intensity - 0.15) / 0.20;
+            r = 0;
+            g = Math.floor(ratio * 255);
+            b = Math.floor((1 - ratio) * 255);
           } else {
-            const ratio = (intensity - 0.75) / 0.25;
-            r = 255;
-            g = Math.floor((1 - ratio) * 255);
-            b = 0;
+            // 0.0 - 0.15: AZUL SUAVE / CIAN
+            const ratio = intensity / 0.15;
+            r = 0;
+            g = Math.floor(ratio * 180);
+            b = 255;
           }
 
           data[i] = r;
           data[i + 1] = g;
           data[i + 2] = b;
-          data[i + 3] = Math.floor(intensity * opacity * 255);
+          // Apply custom user opacity boosted slightly at high heat areas
+          const renderAlpha = Math.min(255, Math.floor((0.35 + intensity * 0.65) * opacity * 255));
+          data[i + 3] = renderAlpha;
         }
       }
 

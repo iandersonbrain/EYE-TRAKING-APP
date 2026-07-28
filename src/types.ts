@@ -205,3 +205,57 @@ export interface BenchmarkData {
   // Optional strategic brand benchmark attached when mode === 'strategic_brand'
   strategicBrandData?: StrategicBrandBenchmarkData;
 }
+
+export interface AccessKey {
+  id: string;
+  code: string;
+  userName: string;
+  role: 'admin' | 'tester';
+  isActive: boolean;
+  createdAt: string;
+  expiresAt?: string;
+  notes?: string;
+}
+
+export interface MaterialLogItem {
+  id: string;
+  timestamp: string;
+  fileName: string;
+  tool: string;
+  fileType: string;
+  fileSize?: string;
+}
+
+export interface ActionLogItem {
+  id: string;
+  timestamp: string;
+  action: string;
+  details: string;
+  tool: string;
+}
+
+export interface UserSessionTelemetry {
+  id: string;
+  accessKeyCode: string;
+  userName: string;
+  loginTime: string;
+  lastActiveTime: string;
+  totalDurationSeconds: number;
+  ipLocation?: {
+    ip?: string;
+    country?: string;
+    city?: string;
+    region?: string;
+    org?: string;
+  };
+  deviceInfo: {
+    userAgent: string;
+    platform: string;
+    isMobile: boolean;
+    screenResolution: string;
+    language: string;
+  };
+  toolsUsed: Record<string, number>; // Tool ID -> duration in seconds
+  materialsUploaded: MaterialLogItem[];
+  exportsAndDownloads: ActionLogItem[];
+}

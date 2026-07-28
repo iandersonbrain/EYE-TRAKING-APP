@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FileDown, Loader2, BookOpen, CheckCircle } from "lucide-react";
 import { jsPDF } from "jspdf";
+import { logExportAction } from "../lib/telemetryManager";
 
 export default function ManualDownloader() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -434,6 +435,7 @@ export default function ManualDownloader() {
 
       // Save generated pdf document
       doc.save("OculiMind_AI_Manual_de_Uso.pdf");
+      logExportAction("Descarga de PDF", "Manual Técnico de Uso Oficial OculiMind AI", "ManualDownloader");
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 4000);

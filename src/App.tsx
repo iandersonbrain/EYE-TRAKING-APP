@@ -4,10 +4,11 @@
  */
 
 import { useState, useEffect } from "react";
-import { Campaign, GazePoint, EmotionDataPoint } from "./types";
+import { Campaign, GazePoint, EmotionDataPoint, AccessKey } from "./types";
 import { campaignPresets } from "./campaignPresets";
 import { compressBase64Image } from "./lib/imageUtils";
 import { generateClientSimulatedData } from "./lib/simulatedPredictive";
+import { getCurrentSession, recordSessionHeartbeat, logMaterialUploaded, logExportAction } from "./lib/telemetryManager";
 import CampaignsList from "./components/CampaignsList";
 import PredictiveView from "./components/PredictiveView";
 import WebcamTracker from "./components/WebcamTracker";
@@ -18,6 +19,8 @@ import AdsOptimizerView from "./components/AdsOptimizerView";
 import BenchmarkView from "./components/BenchmarkView";
 import ManualDownloader from "./components/ManualDownloader";
 import MobileQR from "./components/MobileQR";
+import AccessLoginModal from "./components/AccessLoginModal";
+import AdminTelemetryModal from "./components/AdminTelemetryModal";
 import { 
   LayoutGrid, 
   Cpu, 
@@ -32,7 +35,11 @@ import {
   Eye,
   Info,
   Megaphone,
-  Swords
+  Swords,
+  ShieldCheck,
+  Lock,
+  LogOut,
+  Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -41,6 +48,10 @@ export default function App() {
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"list" | "predictive" | "webcam" | "emotions" | "dashboard360" | "logoReview" | "adsOptimizer" | "benchmark">("list");
   
+  // Access Control & Telemetry State
+  const [currentUserKey, setCurrentUserKey] = useState<AccessKey | null>(null);
+  const [showAdminModal, setShowAdminModal] = useState<boolean>(false);
+
   // Backend Integration Status
   const [integrationStatus, setIntegrationStatus] = useState({
     active: false,
@@ -51,6 +62,34 @@ export default function App() {
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analysisProgressText, setAnalysisProgressText] = useState<string>("");
   const [analysisProgressPercent, setAnalysisProgressPercent] = useState<number>(0);
+
+  // Initialize Session Telemetry & Heartbeat
+  useEffect(() => {
+    // Check if session exists in current window
+    const activeSess = getCurrentSession();
+    if (activeSess) {
+      setCurrentUserKey({
+        id: `key-${activeSess.accessKeyCode}`,
+        code: activeSess.accessKeyCode,
+        userName: activeSess.userName,
+        role: activeSess.accessKeyCode === "ADMIN2026" ? "admin" : "tester",
+        isActive: true,
+        createdAt: activeSess.loginTime
+      });
+    }
+  }, []);
+
+  // Continuous Telemetry Heartbeat interval (tracks duration and active view)
+  useEffect(() => {
+    if (!currentUserKey) return;
+
+    // Send heartbeat every 3 seconds
+    const interval = setInterval(() => {
+      recordSessionHeartbeat(activeTab, 3);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [currentUserKey, activeTab]);
 
   // Initialize with Presets
   useEffect(() => {
@@ -78,11 +117,20 @@ export default function App() {
 
   const activeCampaign = campaigns.find(c => c.id === activeCampaignId) || null;
 
-  // Handler to add campaigns
+  // Handler to add campaigns & log material upload telemetry
   const handleAddCampaign = (newCamp: Campaign) => {
     setCampaigns(prev => [newCamp, ...prev]);
     setActiveCampaignId(newCamp.id);
+
+    // Telemetry log for uploaded material
+    logMaterialUploaded(
+      newCamp.imageName || newCamp.name,
+      activeTab,
+      newCamp.category || "imagen",
+      "Subido por usuario"
+    );
   };
+
 
   // Handler to delete campaigns
   const handleDeleteCampaign = (id: string) => {
@@ -523,8 +571,37 @@ export default function App() {
             </button>
           </nav>
 
-          {/* Integration Status Badge & Manual PDF Downloader & Mobile QR */}
+          {/* Integration Status Badge, Access Control & Manual PDF Downloader & Mobile QR */}
           <div className="flex items-center space-x-2.5">
+            {/* Access Control & Admin Telemetry Button */}
+            <button
+              onClick={() => setShowAdminModal(true)}
+              className="px-3 py-1.5 bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
+              title="Abrir Panel de Control de Claves y Auditoría de Telemetría"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden sm:inline">Control & Telemetría</span>
+            </button>
+
+            {/* Current Active Key Badge */}
+            {currentUserKey && (
+              <div className="hidden lg:flex items-center space-x-1.5 bg-slate-900 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] font-medium">
+                <Users className="w-3 h-3 text-amber-400" />
+                <span className="font-bold">{currentUserKey.userName}</span>
+                <span className="font-mono text-[10px] text-indigo-400 font-bold">({currentUserKey.code})</span>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("aistudio_current_session_id_v1");
+                    setCurrentUserKey(null);
+                  }}
+                  title="Cerrar Sesión"
+                  className="ml-1 text-slate-400 hover:text-rose-400 transition cursor-pointer"
+                >
+                  <LogOut className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
             <button
               onClick={() => setActiveTab("adsOptimizer")}
               className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
@@ -551,6 +628,21 @@ export default function App() {
 
         </div>
       </header>
+
+      {/* Access Login Modal when not logged in */}
+      {!currentUserKey && (
+        <AccessLoginModal 
+          onLoginSuccess={(key) => setCurrentUserKey(key)} 
+        />
+      )}
+
+      {/* Admin Telemetry Control Modal */}
+      {showAdminModal && (
+        <AdminTelemetryModal 
+          onClose={() => setShowAdminModal(false)} 
+        />
+      )}
+
 
       {/* Campaign selection context banner */}
       {activeCampaign && activeTab !== "list" && (

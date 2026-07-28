@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { Campaign, FocusPoint, GazePathPoint } from "../types";
+import { logExportAction } from "../lib/telemetryManager";
 import HeatmapOverlay from "./HeatmapOverlay";
 import GazePathOverlay from "./GazePathOverlay";
 import VideoAnalysisView from "./VideoAnalysisView";
@@ -319,6 +320,7 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
 
       // Save the generated document
       doc.save(`OculiMind_Reporte_${campaign.name.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`);
+      logExportAction("Descarga de Informe PDF", `Reporte Neuronal de ${campaign.name}`, "PredictiveView");
     } catch (error) {
       console.error("Error generating PDF document:", error);
       alert("Hubo un error al compilar el documento PDF. Por favor intenta de nuevo.");

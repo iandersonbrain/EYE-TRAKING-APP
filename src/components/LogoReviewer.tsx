@@ -1,5 +1,6 @@
 import React, { useState, useRef, ChangeEvent } from "react";
 import { compressBase64Image } from "../lib/imageUtils";
+import { logMaterialUploaded, logExportAction } from "../lib/telemetryManager";
 import { 
   ShieldCheck, 
   AlertCircle, 
@@ -175,6 +176,7 @@ export default function LogoReviewer() {
     const reader = new FileReader();
     reader.onload = () => {
       setUploadedLogo(reader.result as string);
+      logMaterialUploaded(file.name, "LogoReviewer", file.type || "imagen/logo");
     };
     reader.readAsDataURL(file);
   };
@@ -412,6 +414,7 @@ OculiMind AI Logo Engine. Hecho en el Workspace de AI Studio.
       link.href = URL.createObjectURL(content);
       link.download = `OculiMind_Kit_Marca_${logoName.replace(/[^a-zA-Z0-9]/g, "_")}.zip`;
       link.click();
+      logExportAction("Descarga de Kit ZIP", `Kit de Identidad Visual para ${logoName}`, "LogoReviewer");
 
       setZipSuccess(true);
       setTimeout(() => setZipSuccess(false), 3500);
