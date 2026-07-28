@@ -132,7 +132,7 @@ export default function AccessLoginModal({ onLoginSuccess }: AccessLoginModalPro
                   className="text-[11px] text-indigo-400 hover:text-indigo-300 font-bold underline flex items-center"
                 >
                   <HelpCircle className="w-3 h-3 mr-1" />
-                  ¿Ver Claves Demo?
+                  ¿Ayuda con tu clave?
                 </button>
               </label>
 
@@ -144,7 +144,7 @@ export default function AccessLoginModal({ onLoginSuccess }: AccessLoginModalPro
                     setAccessCode(e.target.value);
                     setErrorMsg(null);
                   }}
-                  placeholder="ej. ADMIN2026 o NEURO2026"
+                  placeholder="Ingrese su clave asignada..."
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono tracking-wider"
                   autoFocus
                 />
@@ -209,27 +209,22 @@ export default function AccessLoginModal({ onLoginSuccess }: AccessLoginModalPro
           {showDemoInfo && (
             <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-2.5 text-xs text-slate-300 animate-fadeIn">
               <div className="font-bold text-indigo-400 uppercase tracking-wider text-[10px]">
-                Claves para Evaluación y Pruebas:
+                Información de Acceso de Evaluación:
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickKeyFill("ADMIN2026")}
-                  className="p-2 bg-slate-900 border border-slate-800 hover:border-indigo-500 rounded-xl text-left transition"
-                >
-                  <span className="font-mono font-bold text-white block">ADMIN2026</span>
-                  <span className="text-[10px] text-indigo-300 block">PIN Maestro (Admin Panel)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickKeyFill("NEURO2026")}
-                  className="p-2 bg-slate-900 border border-slate-800 hover:border-indigo-500 rounded-xl text-left transition"
-                >
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Cada evaluador cuenta con una clave personal asignada. Para pruebas generales de usuario, puedes utilizar la clave de evaluador autorizada a continuación:
+              </p>
+              <button
+                type="button"
+                onClick={() => handleQuickKeyFill("NEURO2026")}
+                className="w-full p-2.5 bg-slate-900 border border-slate-800 hover:border-indigo-500 rounded-xl text-left transition flex items-center justify-between"
+              >
+                <div>
                   <span className="font-mono font-bold text-white block">NEURO2026</span>
-                  <span className="text-[10px] text-emerald-300 block">Usuario Prueba VIP</span>
-                </button>
-              </div>
+                  <span className="text-[10px] text-emerald-300 block">Clave Evaluador Invitado</span>
+                </div>
+                <span className="text-[11px] font-bold text-indigo-400 underline">Usar esta clave</span>
+              </button>
             </div>
           )}
 
