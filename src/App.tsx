@@ -39,7 +39,10 @@ import {
   ShieldCheck,
   Lock,
   LogOut,
-  Users
+  Users,
+  Menu,
+  X,
+  ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -47,6 +50,9 @@ export default function App() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"list" | "predictive" | "webcam" | "emotions" | "dashboard360" | "logoReview" | "adsOptimizer" | "benchmark">("list");
+  
+  // Mobile Navigation State
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   
   // Access Control & Telemetry State
   const [currentUserKey, setCurrentUserKey] = useState<AccessKey | null>(null);
@@ -457,27 +463,30 @@ export default function App() {
       
       {/* Platform Global Topbar */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
           
           {/* Logo Brand */}
           <div 
-            onClick={() => setActiveTab("list")} 
-            className="flex items-center space-x-2.5 cursor-pointer group"
+            onClick={() => {
+              setActiveTab("list");
+              setMobileMenuOpen(false);
+            }} 
+            className="flex items-center space-x-2.5 cursor-pointer group shrink-0"
           >
             <div className="p-2 rounded-xl bg-indigo-600 group-hover:bg-indigo-500 transition shadow-md shadow-indigo-600/10">
               <Eye className="w-5 h-5 text-white" />
             </div>
             <div>
               <span className="font-display font-bold text-slate-900 tracking-tight text-base leading-none block">OculiMind AI</span>
-              <span className="text-[9px] text-indigo-600 font-mono tracking-wider uppercase font-bold leading-none block mt-0.5">PLATAFORMA COGNITIVA 360°</span>
+              <span className="text-[9px] text-indigo-600 font-mono tracking-wider uppercase font-bold leading-none hidden sm:block mt-0.5">PLATAFORMA COGNITIVA 360°</span>
             </div>
           </div>
 
-          {/* Tab Navigation Hub */}
-          <nav className="hidden md:flex bg-slate-100/80 rounded-2xl p-1 text-xs font-semibold max-w-fit">
+          {/* Desktop Tab Navigation Hub */}
+          <nav className="hidden lg:flex bg-slate-100/80 rounded-2xl p-1 text-xs font-semibold max-w-fit">
             <button
               onClick={() => setActiveTab("list")}
-              className={`px-4 py-2 rounded-xl transition-all ${
+              className={`px-3 py-2 rounded-xl transition-all ${
                 activeTab === "list" 
                   ? "bg-white text-slate-900 shadow-xs" 
                   : "text-slate-500 hover:text-slate-800"
@@ -490,7 +499,7 @@ export default function App() {
             <button
               disabled={!activeCampaign}
               onClick={() => setActiveTab("predictive")}
-              className={`px-4 py-2 rounded-xl transition-all ${
+              className={`px-3 py-2 rounded-xl transition-all ${
                 !activeCampaign ? "opacity-40 cursor-not-allowed" : ""
               } ${
                 activeTab === "predictive" 
@@ -505,7 +514,7 @@ export default function App() {
             <button
               disabled={!activeCampaign}
               onClick={() => setActiveTab("webcam")}
-              className={`px-4 py-2 rounded-xl transition-all ${
+              className={`px-3 py-2 rounded-xl transition-all ${
                 !activeCampaign ? "opacity-40 cursor-not-allowed" : ""
               } ${
                 activeTab === "webcam" 
@@ -520,7 +529,7 @@ export default function App() {
             <button
               disabled={!activeCampaign}
               onClick={() => setActiveTab("emotions")}
-              className={`px-4 py-2 rounded-xl transition-all ${
+              className={`px-3 py-2 rounded-xl transition-all ${
                 !activeCampaign ? "opacity-40 cursor-not-allowed" : ""
               } ${
                 activeTab === "emotions" 
@@ -535,7 +544,7 @@ export default function App() {
             <button
               disabled={!activeCampaign || !activeCampaign.realGaze}
               onClick={() => setActiveTab("dashboard360")}
-              className={`px-4 py-2 rounded-xl transition-all ${
+              className={`px-3 py-2 rounded-xl transition-all ${
                 !activeCampaign || !activeCampaign.realGaze ? "opacity-40 cursor-not-allowed" : ""
               } ${
                 activeTab === "dashboard360" 
@@ -549,7 +558,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab("logoReview")}
-              className={`px-4 py-2 rounded-xl transition-all ${
+              className={`px-3 py-2 rounded-xl transition-all ${
                 activeTab === "logoReview" 
                   ? "bg-white text-slate-900 shadow-xs" 
                   : "text-slate-500 hover:text-slate-800"
@@ -561,7 +570,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab("benchmark")}
-              className={`px-4 py-2 rounded-xl transition-all ${
+              className={`px-3 py-2 rounded-xl transition-all ${
                 activeTab === "benchmark" 
                   ? "bg-indigo-600 text-white shadow-sm font-bold" 
                   : "text-indigo-600 hover:bg-indigo-50 font-bold"
@@ -573,7 +582,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab("adsOptimizer")}
-              className={`px-4 py-2 rounded-xl transition-all ${
+              className={`px-3 py-2 rounded-xl transition-all ${
                 activeTab === "adsOptimizer" 
                   ? "bg-white text-slate-900 shadow-xs" 
                   : "text-slate-500 hover:text-slate-800"
@@ -584,21 +593,21 @@ export default function App() {
             </button>
           </nav>
 
-          {/* Integration Status Badge, Access Control & Manual PDF Downloader & Mobile QR */}
-          <div className="flex items-center space-x-2.5">
-            {/* Access Control & Admin Telemetry Button */}
+          {/* Header Action Buttons (Responsive Desktop & Mobile) */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+            {/* Access Control Button (Visible Desktop & Mobile) */}
             <button
               onClick={handleOpenAdminPanel}
-              className="px-3 py-1.5 bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
-              title="Abrir Panel de Control de Claves y Auditoría de Telemetría"
+              className="px-2.5 sm:px-3 py-1.5 bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-xs shrink-0"
+              title="Abrir Panel de Control de Claves y Auditoría"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="hidden sm:inline">Gestión de Usuarios & Claves</span>
+              <span className="hidden sm:inline">Gestión Claves</span>
             </button>
 
-            {/* Current Active Key Badge */}
+            {/* Current Active Key Badge (Desktop Only) */}
             {currentUserKey && (
-              <div className="hidden lg:flex items-center space-x-1.5 bg-slate-900 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] font-medium">
+              <div className="hidden xl:flex items-center space-x-1.5 bg-slate-900 text-slate-200 border border-slate-700 px-2.5 py-1 rounded-xl text-[11px] font-medium shrink-0">
                 <Users className="w-3 h-3 text-amber-400" />
                 <span className="font-bold">{currentUserKey.userName}</span>
                 <span className="font-mono text-[10px] text-indigo-400 font-bold">({currentUserKey.code})</span>
@@ -615,17 +624,26 @@ export default function App() {
               </div>
             )}
 
+            {/* Sync Algoritmos (Desktop Only) */}
             <button
               onClick={() => setActiveTab("adsOptimizer")}
-              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
+              className="hidden md:flex px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 text-xs font-bold rounded-xl transition items-center space-x-1.5 cursor-pointer shadow-xs shrink-0"
               title="Verificar actualizaciones del algoritmo de Meta y Google Ads"
             >
               <RefreshCw className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="hidden md:inline">Algoritmos Sync</span>
+              <span>Algoritmos Sync</span>
             </button>
+
+            {/* Manual PDF Downloader */}
             <ManualDownloader />
-            <MobileQR />
-            <div className={`px-3 py-1.5 rounded-full border text-[10px] font-semibold tracking-wide flex items-center space-x-1.5 max-w-[200px] sm:max-w-none truncate ${
+
+            {/* Mobile QR (Tablet / Desktop Only) */}
+            <div className="hidden md:block">
+              <MobileQR />
+            </div>
+
+            {/* Integration Status Badge */}
+            <div className={`hidden sm:flex px-2.5 py-1.5 rounded-full border text-[10px] font-semibold tracking-wide items-center space-x-1.5 shrink-0 ${
               integrationStatus.active 
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
                 : "bg-amber-50 text-amber-700 border-amber-200"
@@ -635,12 +653,426 @@ export default function App() {
               ) : (
                 <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
               )}
-              <span className="truncate">{integrationStatus.text}</span>
+              <span className="hidden md:inline">{integrationStatus.text}</span>
             </div>
+
+            {/* Mobile Drawer Menu Toggle (Mobile Only) */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl border border-slate-200 transition cursor-pointer shrink-0 ml-1"
+              aria-label="Abrir Menú de Navegación"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5 text-slate-900" /> : <Menu className="w-5 h-5 text-slate-900" />}
+            </button>
           </div>
 
         </div>
       </header>
+
+      {/* Mobile Sticky Horizontal Scroll Navigation Bar (Mobile / Tablet) */}
+      <div className="lg:hidden bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-16 z-30 px-3 py-2 overflow-x-auto scrollbar-none flex items-center space-x-2 shadow-xs">
+        <button
+          onClick={() => setActiveTab("list")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center space-x-1.5 shrink-0 transition cursor-pointer min-h-[38px] ${
+            activeTab === "list" 
+              ? "bg-indigo-600 text-white shadow-xs" 
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          <LayoutGrid className="w-3.5 h-3.5" />
+          <span>Estudios</span>
+        </button>
+
+        <button
+          disabled={!activeCampaign}
+          onClick={() => setActiveTab("predictive")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center space-x-1.5 shrink-0 transition cursor-pointer min-h-[38px] ${
+            !activeCampaign 
+              ? "opacity-40 bg-slate-100 text-slate-400 cursor-not-allowed" 
+              : activeTab === "predictive" 
+                ? "bg-indigo-600 text-white shadow-xs" 
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          <Cpu className="w-3.5 h-3.5" />
+          <span>IA Predictiva</span>
+        </button>
+
+        <button
+          disabled={!activeCampaign}
+          onClick={() => setActiveTab("webcam")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center space-x-1.5 shrink-0 transition cursor-pointer min-h-[38px] ${
+            !activeCampaign 
+              ? "opacity-40 bg-slate-100 text-slate-400 cursor-not-allowed" 
+              : activeTab === "webcam" 
+                ? "bg-indigo-600 text-white shadow-xs" 
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          <Video className="w-3.5 h-3.5" />
+          <span>Webcam Real</span>
+        </button>
+
+        <button
+          disabled={!activeCampaign}
+          onClick={() => setActiveTab("emotions")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center space-x-1.5 shrink-0 transition cursor-pointer min-h-[38px] ${
+            !activeCampaign 
+              ? "opacity-40 bg-slate-100 text-slate-400 cursor-not-allowed" 
+              : activeTab === "emotions" 
+                ? "bg-indigo-600 text-white shadow-xs" 
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          <BrainCircuit className="w-3.5 h-3.5" />
+          <span>Emotion AI</span>
+        </button>
+
+        <button
+          disabled={!activeCampaign || !activeCampaign.realGaze}
+          onClick={() => setActiveTab("dashboard360")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center space-x-1.5 shrink-0 transition cursor-pointer min-h-[38px] ${
+            !activeCampaign || !activeCampaign.realGaze 
+              ? "opacity-40 bg-slate-100 text-slate-400 cursor-not-allowed" 
+              : activeTab === "dashboard360" 
+                ? "bg-indigo-600 text-white shadow-xs" 
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>Análisis 360°</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("logoReview")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center space-x-1.5 shrink-0 transition cursor-pointer min-h-[38px] ${
+            activeTab === "logoReview" 
+              ? "bg-indigo-600 text-white shadow-xs" 
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Logo Review</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("benchmark")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center space-x-1.5 shrink-0 transition cursor-pointer min-h-[38px] ${
+            activeTab === "benchmark" 
+              ? "bg-amber-500 text-white shadow-xs font-black" 
+              : "bg-amber-100 text-amber-900 border border-amber-300 font-bold"
+          }`}
+        >
+          <Swords className="w-3.5 h-3.5 text-amber-600" />
+          <span>Benchmark AI</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("adsOptimizer")}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex items-center space-x-1.5 shrink-0 transition cursor-pointer min-h-[38px] ${
+            activeTab === "adsOptimizer" 
+              ? "bg-indigo-600 text-white shadow-xs" 
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          }`}
+        >
+          <Megaphone className="w-3.5 h-3.5 text-indigo-500" />
+          <span>Ads Meta & Google</span>
+        </button>
+      </div>
+
+      {/* Mobile Drawer Menu Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs"
+            />
+
+            {/* Slide-Up Drawer Panel */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="relative bg-slate-900 text-slate-100 rounded-t-3xl border-t border-slate-800 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col z-10"
+            >
+              {/* Drawer Top Header Handle */}
+              <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+                <div className="flex items-center space-x-2">
+                  <div className="p-1.5 rounded-lg bg-indigo-600">
+                    <Eye className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="font-bold text-sm text-white font-display">Menú Principal & Herramientas</span>
+                </div>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-4 overflow-y-auto space-y-5">
+                {/* Active User Section inside Mobile Drawer */}
+                {currentUserKey && (
+                  <div className="p-3.5 bg-slate-950/80 border border-slate-800 rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-9 h-9 bg-indigo-600/20 border border-indigo-500/40 rounded-xl flex items-center justify-center text-indigo-400">
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-white block">{currentUserKey.userName}</span>
+                        <span className="text-[10px] text-indigo-400 font-mono font-bold block">Clave: {currentUserKey.code} • Rol: {currentUserKey.role}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem("aistudio_current_session_id_v1");
+                        setCurrentUserKey(null);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="px-2.5 py-1 bg-rose-500/20 border border-rose-500/40 text-rose-300 text-[11px] font-bold rounded-lg flex items-center space-x-1"
+                    >
+                      <LogOut className="w-3 h-3" />
+                      <span>Salir</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Quick Action Tools inside Drawer */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block px-1">Acciones Rápidas:</span>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        handleOpenAdminPanel();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="p-3 bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/40 rounded-2xl text-left transition space-y-1 cursor-pointer"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                      <span className="text-xs font-bold text-white block">Gestión de Claves</span>
+                      <span className="text-[10px] text-slate-400 block">Control de usuarios</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveTab("adsOptimizer");
+                        setMobileMenuOpen(false);
+                      }}
+                      className="p-3 bg-slate-950/80 hover:bg-slate-800 border border-slate-800 rounded-2xl text-left transition space-y-1 cursor-pointer"
+                    >
+                      <RefreshCw className="w-4 h-4 text-cyan-400" />
+                      <span className="text-xs font-bold text-white block">Algoritmos Sync</span>
+                      <span className="text-[10px] text-slate-400 block">Meta & Google Ads</span>
+                    </button>
+                  </div>
+
+                  <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <ManualDownloader showTextOnMobile={true} />
+                    </div>
+                    <span className="text-[10px] text-slate-400">PDF Oficial Neuromarketing</span>
+                  </div>
+                </div>
+
+                {/* List of Navigation Modules */}
+                <div className="space-y-2 pt-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block px-1">Navegación de Módulos Cognitivos:</span>
+                  
+                  <div className="space-y-1.5">
+                    <button
+                      onClick={() => {
+                        setActiveTab("list");
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition ${
+                        activeTab === "list" 
+                          ? "bg-indigo-600 text-white border-indigo-500 font-bold" 
+                          : "bg-slate-950/50 text-slate-300 border-slate-800 hover:border-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <LayoutGrid className="w-4 h-4" />
+                        <div>
+                          <span className="text-xs block">Estudios de Atención</span>
+                          <span className="text-[10px] opacity-75 block">Panel principal de campañas</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      disabled={!activeCampaign}
+                      onClick={() => {
+                        setActiveTab("predictive");
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition ${
+                        !activeCampaign 
+                          ? "opacity-40 cursor-not-allowed bg-slate-950/30 border-slate-900" 
+                          : activeTab === "predictive" 
+                            ? "bg-indigo-600 text-white border-indigo-500 font-bold" 
+                            : "bg-slate-950/50 text-slate-300 border-slate-800 hover:border-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Cpu className="w-4 h-4" />
+                        <div>
+                          <span className="text-xs block">IA Predictiva</span>
+                          <span className="text-[10px] opacity-75 block">Mapas de calor & fijaciones visuales</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      disabled={!activeCampaign}
+                      onClick={() => {
+                        setActiveTab("webcam");
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition ${
+                        !activeCampaign 
+                          ? "opacity-40 cursor-not-allowed bg-slate-950/30 border-slate-900" 
+                          : activeTab === "webcam" 
+                            ? "bg-indigo-600 text-white border-indigo-500 font-bold" 
+                            : "bg-slate-950/50 text-slate-300 border-slate-800 hover:border-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Video className="w-4 h-4" />
+                        <div>
+                          <span className="text-xs block">Webcam Real</span>
+                          <span className="text-[10px] opacity-75 block">Eye-tracking directo con cámara</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      disabled={!activeCampaign}
+                      onClick={() => {
+                        setActiveTab("emotions");
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition ${
+                        !activeCampaign 
+                          ? "opacity-40 cursor-not-allowed bg-slate-950/30 border-slate-900" 
+                          : activeTab === "emotions" 
+                            ? "bg-indigo-600 text-white border-indigo-500 font-bold" 
+                            : "bg-slate-950/50 text-slate-300 border-slate-800 hover:border-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <BrainCircuit className="w-4 h-4" />
+                        <div>
+                          <span className="text-xs block">Emotion AI</span>
+                          <span className="text-[10px] opacity-75 block">Microexpresiones faciales & valencia</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      disabled={!activeCampaign || !activeCampaign.realGaze}
+                      onClick={() => {
+                        setActiveTab("dashboard360");
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition ${
+                        !activeCampaign || !activeCampaign.realGaze 
+                          ? "opacity-40 cursor-not-allowed bg-slate-950/30 border-slate-900" 
+                          : activeTab === "dashboard360" 
+                            ? "bg-indigo-600 text-white border-indigo-500 font-bold" 
+                            : "bg-slate-950/50 text-slate-300 border-slate-800 hover:border-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Layers className="w-4 h-4" />
+                        <div>
+                          <span className="text-xs block">Análisis 360°</span>
+                          <span className="text-[10px] opacity-75 block">Reporte integrado multi-modal</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveTab("logoReview");
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition ${
+                        activeTab === "logoReview" 
+                          ? "bg-indigo-600 text-white border-indigo-500 font-bold" 
+                          : "bg-slate-950/50 text-slate-300 border-slate-800 hover:border-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Sparkles className="w-4 h-4 text-amber-400" />
+                        <div>
+                          <span className="text-xs block">Logo Review</span>
+                          <span className="text-[10px] opacity-75 block">Auditoría de isotipos & marca</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveTab("benchmark");
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition ${
+                        activeTab === "benchmark" 
+                          ? "bg-amber-500 text-white border-amber-400 font-bold" 
+                          : "bg-amber-950/30 text-amber-200 border-amber-900/50 hover:border-amber-800"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Swords className="w-4 h-4 text-amber-400" />
+                        <div>
+                          <span className="text-xs block font-bold">Benchmark AI & Ranking RRSS</span>
+                          <span className="text-[10px] opacity-80 block">Competidores & Ranking de Seguidores</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setActiveTab("adsOptimizer");
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition ${
+                        activeTab === "adsOptimizer" 
+                          ? "bg-indigo-600 text-white border-indigo-500 font-bold" 
+                          : "bg-slate-950/50 text-slate-300 border-slate-800 hover:border-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Megaphone className="w-4 h-4 text-cyan-400" />
+                        <div>
+                          <span className="text-xs block">Ads Meta & Google</span>
+                          <span className="text-[10px] opacity-75 block">Hub de optimización de pauta</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Access Login Modal when not logged in */}
       {!currentUserKey && (

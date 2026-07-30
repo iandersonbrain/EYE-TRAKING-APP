@@ -3,7 +3,7 @@ import { FileDown, Loader2, BookOpen, CheckCircle } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { logExportAction } from "../lib/telemetryManager";
 
-export default function ManualDownloader() {
+export default function ManualDownloader({ showTextOnMobile = false }: { showTextOnMobile?: boolean }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -487,11 +487,11 @@ export default function ManualDownloader() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <button
         onClick={generatePDFManual}
         disabled={isGenerating}
-        className={`px-4 py-2 text-xs font-bold rounded-xl transition duration-200 flex items-center gap-2 shadow-xs cursor-pointer ${
+        className={`px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold rounded-xl transition duration-200 flex items-center gap-1.5 sm:gap-2 shadow-xs cursor-pointer ${
           isGenerating 
             ? "bg-indigo-100 text-indigo-500 border border-indigo-200" 
             : success
@@ -503,17 +503,17 @@ export default function ManualDownloader() {
         {isGenerating ? (
           <>
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            <span>Generando Manual...</span>
+            <span className={showTextOnMobile ? "inline" : "hidden sm:inline"}>Generando...</span>
           </>
         ) : success ? (
           <>
             <CheckCircle className="w-3.5 h-3.5 text-white animate-bounce" />
-            <span>¡Manual Descargado!</span>
+            <span className={showTextOnMobile ? "inline" : "hidden sm:inline"}>¡Descargado!</span>
           </>
         ) : (
           <>
             <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Manual de Uso PDF</span>
+            <span className={showTextOnMobile ? "inline" : "hidden sm:inline"}>Manual PDF</span>
           </>
         )}
       </button>
