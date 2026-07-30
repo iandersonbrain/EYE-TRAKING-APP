@@ -324,6 +324,12 @@ export default function BenchmarkView() {
   const handleOpenNewBenchmark = () => {
     resetFormFields();
     setIsCreatingNew(true);
+    setTimeout(() => {
+      const el = document.getElementById("new-benchmark-form");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 120);
   };
 
   const handleDeleteBenchmark = (idToDelete: string) => {
@@ -857,18 +863,20 @@ export default function BenchmarkView() {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
             <button
+              type="button"
               onClick={handleOpenNewBenchmark}
-              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center space-x-2 cursor-pointer"
+              className="px-4 py-3 sm:py-2.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center space-x-2 cursor-pointer touch-manipulation active:scale-98"
             >
-              <Plus className="w-4 h-4" />
-              <span>Nuevo Benchmark</span>
+              <Plus className="w-4 h-4 text-white" />
+              <span>+ Nuevo Benchmark</span>
             </button>
             
             <button
+              type="button"
               onClick={handleExportPDF}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center space-x-2 cursor-pointer"
+              className="px-4 py-3 sm:py-2.5 min-h-[44px] bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center space-x-2 cursor-pointer touch-manipulation active:scale-98"
             >
               <FileDown className="w-4 h-4 text-indigo-400" />
               <span>Exportar PDF</span>
@@ -876,8 +884,9 @@ export default function BenchmarkView() {
 
             {activeBenchmark && (
               <button
+                type="button"
                 onClick={() => handleDeleteBenchmark(activeBenchmark.id)}
-                className="px-3 py-2.5 bg-slate-800/80 hover:bg-rose-950 text-slate-300 hover:text-rose-300 border border-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                className="px-3 py-3 sm:py-2.5 min-h-[44px] bg-slate-800/80 hover:bg-rose-950 text-slate-300 hover:text-rose-300 border border-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer touch-manipulation"
                 title="Borrar o reiniciar este benchmark"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -994,10 +1003,11 @@ export default function BenchmarkView() {
       <AnimatePresence>
         {isCreatingNew && (
           <motion.div 
+            id="new-benchmark-form"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl border border-indigo-500/30 shadow-2xl space-y-6 overflow-hidden"
+            className="bg-slate-900 text-white p-5 sm:p-8 rounded-3xl border border-indigo-500/30 shadow-2xl space-y-6 overflow-hidden scroll-mt-28"
           >
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div>
