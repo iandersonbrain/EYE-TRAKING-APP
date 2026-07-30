@@ -18,6 +18,15 @@ const DEFAULT_ACCESS_KEYS: AccessKey[] = [
     notes: "Clave Maestra para administración total y métricas"
   },
   {
+    id: "key-[francis]",
+    code: "FRANCIS2026",
+    userName: "Francis Añazco",
+    role: "tester",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    notes: "Acceso asignado a Francis Añazco"
+  },
+  {
     id: "key-demo-01",
     code: "NEURO2026",
     userName: "Usuario Demo VIP",
@@ -34,6 +43,15 @@ const DEFAULT_ACCESS_KEYS: AccessKey[] = [
     isActive: true,
     createdAt: new Date().toISOString(),
     notes: "Acceso temporal para pruebas de cliente"
+  },
+  {
+    id: "key-demo-03",
+    code: "VIP2026",
+    userName: "Evaluador Temporal",
+    role: "tester",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    notes: "Acceso rápido de evaluación"
   }
 ];
 

@@ -66,6 +66,7 @@ export default function AccessLoginModal({ onLoginSuccess }: AccessLoginModalPro
 
   const handleQuickKeyFill = (code: string) => {
     setAccessCode(code);
+    setAcceptedTerms(true);
     setErrorMsg(null);
   };
 
@@ -211,23 +212,51 @@ export default function AccessLoginModal({ onLoginSuccess }: AccessLoginModalPro
           {/* Quick Fill Helper for Testing */}
           {showDemoInfo && (
             <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-2.5 text-xs text-slate-300 animate-fadeIn">
-              <div className="font-bold text-indigo-400 uppercase tracking-wider text-[10px]">
-                Información de Acceso de Evaluación:
+              <div className="font-bold text-indigo-400 uppercase tracking-wider text-[10px] flex items-center justify-between">
+                <span>Claves de Acceso Rápidas Disponibles:</span>
+                <span className="text-[10px] text-emerald-400">Clic para rellenar & aceptar</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                Cada evaluador cuenta con una clave personal asignada. Para pruebas generales de usuario, puedes utilizar la clave de evaluador autorizada a continuación:
+                Selecciona cualquiera de estas claves o ingresa tu nombre asignado para acceder inmediatamente:
               </p>
-              <button
-                type="button"
-                onClick={() => handleQuickKeyFill("NEURO2026")}
-                className="w-full p-2.5 bg-slate-900 border border-slate-800 hover:border-indigo-500 rounded-xl text-left transition flex items-center justify-between"
-              >
-                <div>
-                  <span className="font-mono font-bold text-white block">NEURO2026</span>
-                  <span className="text-[10px] text-emerald-300 block">Clave Evaluador Invitado</span>
-                </div>
-                <span className="text-[11px] font-bold text-indigo-400 underline">Usar esta clave</span>
-              </button>
+
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => handleQuickKeyFill("FRANCIS2026")}
+                  className="w-full p-2.5 bg-slate-900 border border-slate-800 hover:border-indigo-500 rounded-xl text-left transition flex items-center justify-between group cursor-pointer"
+                >
+                  <div>
+                    <span className="font-mono font-bold text-white block">FRANCIS2026 <span className="text-slate-400 font-sans font-normal">(o Francis Añazco)</span></span>
+                    <span className="text-[10px] text-emerald-300 block">Acceso Personal Asignado</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-indigo-400 group-hover:underline">Usar esta clave</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickKeyFill("NEURO2026")}
+                  className="w-full p-2.5 bg-slate-900 border border-slate-800 hover:border-indigo-500 rounded-xl text-left transition flex items-center justify-between group cursor-pointer"
+                >
+                  <div>
+                    <span className="font-mono font-bold text-white block">NEURO2026</span>
+                    <span className="text-[10px] text-emerald-300 block">Clave Evaluador VIP</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-indigo-400 group-hover:underline">Usar esta clave</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickKeyFill("TEST2026")}
+                  className="w-full p-2.5 bg-slate-900 border border-slate-800 hover:border-indigo-500 rounded-xl text-left transition flex items-center justify-between group cursor-pointer"
+                >
+                  <div>
+                    <span className="font-mono font-bold text-white block">TEST2026</span>
+                    <span className="text-[10px] text-emerald-300 block">Empresa Evaluadora A</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-indigo-400 group-hover:underline">Usar esta clave</span>
+                </button>
+              </div>
             </div>
           )}
 
