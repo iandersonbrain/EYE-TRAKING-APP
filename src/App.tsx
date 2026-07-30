@@ -8,7 +8,7 @@ import { Campaign, GazePoint, EmotionDataPoint, AccessKey } from "./types";
 import { campaignPresets } from "./campaignPresets";
 import { compressBase64Image } from "./lib/imageUtils";
 import { generateClientSimulatedData } from "./lib/simulatedPredictive";
-import { getCurrentSession, recordSessionHeartbeat, logMaterialUploaded, logExportAction } from "./lib/telemetryManager";
+import { getCurrentSession, recordSessionHeartbeat, logMaterialUploaded, logExportAction, getMasterPin } from "./lib/telemetryManager";
 import CampaignsList from "./components/CampaignsList";
 import PredictiveView from "./components/PredictiveView";
 import WebcamTracker from "./components/WebcamTracker";
@@ -51,6 +51,19 @@ export default function App() {
   // Access Control & Telemetry State
   const [currentUserKey, setCurrentUserKey] = useState<AccessKey | null>(null);
   const [showAdminModal, setShowAdminModal] = useState<boolean>(false);
+  const [showPinPrompt, setShowPinPrompt] = useState<boolean>(false);
+  const [adminPinInput, setAdminPinInput] = useState<string>("");
+  const [adminPinError, setAdminPinError] = useState<string | null>(null);
+
+  const handleOpenAdminPanel = () => {
+    if (currentUserKey?.role === "admin") {
+      setShowAdminModal(true);
+    } else {
+      setShowPinPrompt(true);
+      setAdminPinInput("");
+      setAdminPinError(null);
+    }
+  };
 
   // Backend Integration Status
   const [integrationStatus, setIntegrationStatus] = useState({
@@ -575,12 +588,12 @@ export default function App() {
           <div className="flex items-center space-x-2.5">
             {/* Access Control & Admin Telemetry Button */}
             <button
-              onClick={() => setShowAdminModal(true)}
+              onClick={handleOpenAdminPanel}
               className="px-3 py-1.5 bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 text-xs font-bold rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
               title="Abrir Panel de Control de Claves y Auditoría de Telemetría"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="hidden sm:inline">Control & Telemetría</span>
+              <span className="hidden sm:inline">Gestión de Usuarios & Claves</span>
             </button>
 
             {/* Current Active Key Badge */}
@@ -641,6 +654,87 @@ export default function App() {
         <AdminTelemetryModal 
           onClose={() => setShowAdminModal(false)} 
         />
+      )}
+
+      {/* Master PIN Verification Modal for Guest Users */}
+      {showPinPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-rose-500 to-indigo-500"></div>
+
+            <div className="flex items-start space-x-3.5">
+              <div className="w-11 h-11 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-center text-amber-400 shrink-0">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="inline-block bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded text-[10px] font-bold text-amber-300 uppercase tracking-wider mb-1">
+                  Acceso Restringido • Solo Administrador
+                </div>
+                <h3 className="text-base font-bold text-white font-display">
+                  Autenticación de Administrador
+                </h3>
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Los usuarios invitados no tienen acceso al Administrador de Contraseñas ni al control de claves. Por favor ingrese el <strong>PIN Maestro</strong> para continuar.
+                </p>
+              </div>
+            </div>
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const masterPin = getMasterPin();
+                if (adminPinInput.trim().toUpperCase() === masterPin.toUpperCase()) {
+                  setShowPinPrompt(false);
+                  setShowAdminModal(true);
+                } else {
+                  setAdminPinError("PIN Maestro incorrecto. Acceso denegado.");
+                }
+              }} 
+              className="space-y-3.5 pt-2"
+            >
+              <div>
+                <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                  PIN Maestro del Administrador
+                </label>
+                <input
+                  type="password"
+                  placeholder="Ingrese el PIN Maestro..."
+                  value={adminPinInput}
+                  onChange={(e) => {
+                    setAdminPinInput(e.target.value);
+                    setAdminPinError(null);
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white font-mono placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                  autoFocus
+                />
+              </div>
+
+              {adminPinError && (
+                <div className="p-2.5 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center space-x-2 text-rose-300 text-xs animate-fadeIn">
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{adminPinError}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end space-x-2.5 pt-2 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowPinPrompt(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition shadow-md shadow-indigo-600/25 flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Verificar PIN</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
 
