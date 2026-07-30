@@ -48,10 +48,26 @@ import {
   Sparkle,
   RotateCcw,
   X,
-  ChevronDown
+  ChevronDown,
+  Users,
+  Award,
+  Flame
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { jsPDF } from "jspdf";
+
+function parseFollowersCount(str: string): number {
+  if (!str) return 0;
+  const clean = str.replace(/,/g, "");
+  const match = clean.match(/([\d.]+)\s*([KMBkmb])?/);
+  if (!match) return 0;
+  const num = parseFloat(match[1]) || 0;
+  const unit = (match[2] || "").toUpperCase();
+  if (unit === "M") return num * 1_000_000;
+  if (unit === "K") return num * 1_000;
+  if (unit === "B") return num * 1_000_000_000;
+  return num;
+}
 
 const TOP_FAVORITE_COUNTRIES = [
   "México",
@@ -758,6 +774,28 @@ export default function BenchmarkView() {
         doc.setFont("helvetica", "normal");
         doc.text(`   Fortaleza: ${c.topStrength}`, 15, yPos);
         yPos += 6;
+      });
+
+      // RANKING DE SEGUIDORES RRSS
+      yPos += 4;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("RANKING POR CANTIDAD DE SEGUIDORES EN REDES SOCIALES (RRSS):", 15, yPos);
+      yPos += 6;
+
+      const pdfRanked = [...sb.competitors].sort(
+        (a, b) => parseFollowersCount(b.socialFollowers) - parseFollowersCount(a.socialFollowers)
+      );
+
+      pdfRanked.forEach((c, idx) => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text(
+          `Puesto #${idx + 1}: ${c.name} - ${c.socialFollowers} seguidores (${c.socialEngagementRate} ER)${c.isTargetBrand ? ' [TU MARCA]' : ''}`,
+          15,
+          yPos
+        );
+        yPos += 5;
       });
 
       yPos += 4;
@@ -1587,6 +1625,205 @@ export default function BenchmarkView() {
             </div>
 
           </div>
+
+          {/* Social Media Followers Ranking Section */}
+          {(() => {
+            const rankedCompetitors = [...currentStratData.competitors].sort((a, b) => {
+              return parseFollowersCount(b.socialFollowers) - parseFollowersCount(a.socialFollowers);
+            });
+
+            const maxFollowers = parseFollowersCount(rankedCompetitors[0]?.socialFollowers || "1");
+            const targetBrandCompetitor = currentStratData.competitors.find(c => c.isTargetBrand);
+            const targetRankIndex = rankedCompetitors.findIndex(c => c.isTargetBrand);
+
+            const topErCompetitor = [...currentStratData.competitors].sort((a, b) => {
+              const parseEr = (str: string) => parseFloat(str.replace(/[^0-9.]/g, "")) || 0;
+              return parseEr(b.socialEngagementRate) - parseEr(a.socialEngagementRate);
+            })[0];
+
+            return (
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center">
+                        <Share2 className="w-3 h-3 mr-1 text-indigo-600" />
+                        Auditoría Social Media & RRSS
+                      </span>
+                      <span className="bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
+                        {rankedCompetitors.length} Marcas Analizadas
+                      </span>
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 font-display flex items-center mt-1">
+                      <Users className="w-4.5 h-4.5 text-indigo-600 mr-2" />
+                      Ranking por Cantidad de Seguidores en Redes Sociales
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Comparativa jerárquica de volumen de comunidad (seguidores) y Tasa de Enganche (Engagement Rate - ER).
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-2 shrink-0">
+                    <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-xl font-bold flex items-center">
+                      <TrendingUp className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                      Benchmarking de Audiencia RRSS
+                    </span>
+                  </div>
+                </div>
+
+                {/* KPI Cards Header */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50/60 p-4 rounded-2xl border border-amber-200/80 space-y-1">
+                    <div className="flex items-center justify-between text-amber-800 text-xs font-bold uppercase tracking-wider">
+                      <span>👑 Líder de Audiencia</span>
+                      <Trophy className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <p className="text-sm font-black text-slate-900 truncate" title={rankedCompetitors[0]?.name}>
+                      {rankedCompetitors[0]?.name || "Competidor Líder"}
+                    </p>
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-xl font-black text-amber-600 font-mono">{rankedCompetitors[0]?.socialFollowers}</span>
+                      <span className="text-[11px] text-amber-800 font-semibold">({rankedCompetitors[0]?.socialEngagementRate} ER)</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-indigo-50 to-slate-50 p-4 rounded-2xl border border-indigo-200/80 space-y-1">
+                    <div className="flex items-center justify-between text-indigo-800 text-xs font-bold uppercase tracking-wider">
+                      <span>🎯 Posición de Tu Marca</span>
+                      <span className="text-xs bg-indigo-600 text-white font-bold px-2 py-0.5 rounded-md">
+                        #{targetRankIndex >= 0 ? targetRankIndex + 1 : "-"} de {rankedCompetitors.length}
+                      </span>
+                    </div>
+                    <p className="text-sm font-black text-slate-900 truncate" title={targetBrandCompetitor?.name}>
+                      {targetBrandCompetitor?.name || currentStratData.targetBrand}
+                    </p>
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-xl font-black text-indigo-600 font-mono">{targetBrandCompetitor?.socialFollowers || "45K"}</span>
+                      <span className="text-[11px] text-indigo-800 font-semibold">({targetBrandCompetitor?.socialEngagementRate || "5.8%"} ER)</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50/60 p-4 rounded-2xl border border-emerald-200/80 space-y-1">
+                    <div className="flex items-center justify-between text-emerald-800 text-xs font-bold uppercase tracking-wider">
+                      <span>⚡ Máximo Engagement (ER)</span>
+                      <Flame className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <p className="text-sm font-black text-slate-900 truncate" title={topErCompetitor?.name}>
+                      {topErCompetitor?.name || "Marca Nicho"}
+                    </p>
+                    <div className="flex items-baseline space-x-2">
+                      <span className="text-xl font-black text-emerald-600 font-mono">{topErCompetitor?.socialEngagementRate} ER</span>
+                      <span className="text-[11px] text-emerald-800 font-semibold">({topErCompetitor?.socialFollowers})</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Followers Ranking List */}
+                <div className="space-y-3 pt-2">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                    Tabla Jerárquica de Seguidores & Cuota Relativa de Audiencia:
+                  </span>
+
+                  <div className="space-y-3">
+                    {rankedCompetitors.map((comp, idx) => {
+                      const count = parseFollowersCount(comp.socialFollowers);
+                      const widthPct = maxFollowers > 0 ? Math.max(10, Math.round((count / maxFollowers) * 100)) : 10;
+                      const isTarget = comp.isTargetBrand;
+
+                      let rankBadgeClass = "bg-slate-100 text-slate-700 border-slate-300";
+                      let rankIcon = null;
+
+                      if (idx === 0) {
+                        rankBadgeClass = "bg-amber-100 text-amber-900 border-amber-300 font-black";
+                        rankIcon = <Trophy className="w-3.5 h-3.5 text-amber-600 mr-1 inline" />;
+                      } else if (idx === 1) {
+                        rankBadgeClass = "bg-slate-200 text-slate-800 border-slate-400 font-bold";
+                        rankIcon = <Award className="w-3.5 h-3.5 text-slate-500 mr-1 inline" />;
+                      } else if (idx === 2) {
+                        rankBadgeClass = "bg-orange-100 text-orange-900 border-orange-300 font-bold";
+                        rankIcon = <Award className="w-3.5 h-3.5 text-orange-600 mr-1 inline" />;
+                      }
+
+                      return (
+                        <div 
+                          key={idx}
+                          className={`p-4 rounded-2xl border transition-all ${
+                            isTarget 
+                              ? "bg-indigo-50/70 border-indigo-300 ring-2 ring-indigo-400/30 shadow-xs" 
+                              : "bg-slate-50/80 border-slate-200 hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                            <div className="flex items-center space-x-3">
+                              {/* Rank Badge */}
+                              <span className={`text-xs px-2.5 py-1 rounded-xl border flex items-center font-mono ${rankBadgeClass}`}>
+                                {rankIcon}
+                                #{idx + 1}
+                              </span>
+
+                              <div className="flex items-center space-x-2">
+                                <span className="font-bold text-slate-900 text-sm">{comp.name}</span>
+                                {isTarget && (
+                                  <span className="bg-indigo-600 text-white text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
+                                    Tu Marca
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center space-x-3 shrink-0">
+                              <div className="text-right">
+                                <span className="text-xs font-mono font-black text-slate-900 block">{comp.socialFollowers}</span>
+                                <span className="text-[10px] text-slate-500 font-semibold block">Seguidores en RRSS</span>
+                              </div>
+
+                              <div className="bg-white px-2.5 py-1 rounded-xl border border-slate-200 text-center shrink-0">
+                                <span className="text-xs font-mono font-bold text-indigo-700 block">{comp.socialEngagementRate}</span>
+                                <span className="text-[9px] text-slate-400 uppercase font-bold block">Tasa ER</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Progress Bar of Relative Follower Scale */}
+                          <div className="space-y-1">
+                            <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden p-0.5 flex items-center">
+                              <div 
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  isTarget 
+                                    ? "bg-gradient-to-r from-amber-500 to-indigo-600" 
+                                    : idx === 0 
+                                      ? "bg-gradient-to-r from-amber-400 to-amber-500" 
+                                      : "bg-indigo-600"
+                                }`}
+                                style={{ width: `${widthPct}%` }}
+                              ></div>
+                            </div>
+                            <div className="flex justify-between items-center text-[10px] text-slate-500">
+                              <span>{widthPct}% de la escala del líder</span>
+                              <span className="italic">
+                                {isTarget ? "En fase de aceleración de comunidad" : comp.topStrength}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Social Media Strategic Takeaway Footer */}
+                <div className="bg-slate-900 text-slate-200 p-4 rounded-2xl border border-slate-800 text-xs space-y-1.5">
+                  <div className="flex items-center space-x-2 text-indigo-300 font-bold uppercase tracking-wider text-[10px]">
+                    <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Conclusión del Benchmark de Seguidores & Engagement</span>
+                  </div>
+                  <p className="text-slate-300 leading-relaxed text-[11px]">
+                    Las marcas con comunidades masivas (como <strong className="text-white">{rankedCompetitors[0]?.name}</strong> con {rankedCompetitors[0]?.socialFollowers}) suelen presentar menores tasas de enganche ({rankedCompetitors[0]?.socialEngagementRate} ER). Esto representa una ventana estratégica clave para <strong className="text-amber-300">{currentStratData.targetBrand}</strong> para capturar mercado orgánico acelerado mediante contenidos interactivos y micro-influenciadores con ER elevado.
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Research Dimensions Deep Dive */}
           <div className="space-y-4">

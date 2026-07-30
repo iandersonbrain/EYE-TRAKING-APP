@@ -32,7 +32,9 @@ import {
   Scale,
   ArrowRightLeft,
   Languages,
-  SpellCheck
+  SpellCheck,
+  Clock,
+  Zap
 } from "lucide-react";
 import { motion } from "motion/react";
 import { jsPDF } from "jspdf";
@@ -63,6 +65,23 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
   const predictive = isPresentation ? currentSlide?.predictive : campaign.predictive;
   const imageUrl = isPresentation ? (currentSlide?.imageUrl || campaign.imageUrl) : campaign.imageUrl;
   const name = isPresentation ? currentSlide?.name : campaign.name;
+
+  // Biometric Timing Metrics requested by user
+  const firstFixationMs = predictive?.firstFixationTimeMs || 
+    (predictive?.gazePath && predictive.gazePath[0] ? (predictive.gazePath[0].durationMs || 180) : 180);
+
+  const totalScanTimeSec = predictive?.totalScanTimeSec || 
+    (predictive?.gazePath && predictive.gazePath.length > 0
+      ? Math.round((predictive.gazePath.reduce((acc, p) => acc + (p.durationMs || 450), 0) + (predictive.gazePath.length - 1) * 110) / 100) / 10
+      : 2.8);
+
+  const topDwellArea = predictive?.maxDwellZone || (predictive?.focusAreas && predictive.focusAreas.length > 0
+    ? {
+        name: predictive.focusAreas[0].name,
+        weight: predictive.focusAreas[0].weight,
+        dwellTimeMs: predictive.gazePath && predictive.gazePath[0] ? predictive.gazePath[0].durationMs : 580
+      }
+    : { name: "Titular Principal / Marca", weight: 95, dwellTimeMs: 580 });
 
   const handleDownloadPDF = async () => {
     if (!predictive) return;
@@ -190,30 +209,49 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
         doc.text("* Captura visual deshabilitada en vista previa por políticas de privacidad del navegador (CORS).", mapX + mapWidth / 2, mapY + mapHeight - 10, { align: "center" });
       }
 
-      // KPI Gauge blocks under image
-      const kpiY = Math.min(65 + mapHeight + 10, pageHeight - 38);
+      // KPI Gauge blocks under image (4 balanced cards)
+      const kpiY = Math.min(65 + mapHeight + 6, pageHeight - 38);
+      const cardW = 42;
       
       // Metric 1: Clarity Score Card
       doc.setFillColor(240, 253, 250); // green-50
-      doc.roundedRect(15, kpiY, 85, 24, 3, 3, "F");
-      
+      doc.roundedRect(15, kpiY, cardW, 22, 3, 3, "F");
       doc.setTextColor(13, 148, 136); // teal-600
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.text("CLARIDAD VISUAL (PUNTUACIÓN)", 20, kpiY + 8);
-      doc.setFontSize(20);
-      doc.text(`${predictive.clarityScore}%`, 20, kpiY + 18);
+      doc.setFontSize(7.5);
+      doc.text("CLARIDAD VISUAL", 18, kpiY + 7);
+      doc.setFontSize(16);
+      doc.text(`${predictive.clarityScore}%`, 18, kpiY + 17);
       
       // Metric 2: Cognitive Load Card
       doc.setFillColor(254, 243, 199); // amber-100
-      doc.roundedRect(pageWidth - 100, kpiY, 85, 24, 3, 3, "F");
-      
+      doc.roundedRect(61, kpiY, cardW, 22, 3, 3, "F");
       doc.setTextColor(180, 83, 9); // amber-700
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.text("CARGA COGNITIVA (ESFUERZO)", pageWidth - 95, kpiY + 8);
-      doc.setFontSize(20);
-      doc.text(`${predictive.cognitiveLoad}%`, pageWidth - 95, kpiY + 18);
+      doc.setFontSize(7.5);
+      doc.text("CARGA COGNITIVA", 64, kpiY + 7);
+      doc.setFontSize(16);
+      doc.text(`${predictive.cognitiveLoad}%`, 64, kpiY + 17);
+
+      // Metric 3: Tiempo de Reacción (TTFF)
+      doc.setFillColor(238, 242, 255); // indigo-50
+      doc.roundedRect(107, kpiY, cardW, 22, 3, 3, "F");
+      doc.setTextColor(67, 56, 202); // indigo-700
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.text("TIEMPO REACCIÓN", 110, kpiY + 7);
+      doc.setFontSize(16);
+      doc.text(`${firstFixationMs} ms`, 110, kpiY + 17);
+
+      // Metric 4: Recorrido Visual Total
+      doc.setFillColor(236, 253, 245); // emerald-50
+      doc.roundedRect(153, kpiY, cardW, 22, 3, 3, "F");
+      doc.setTextColor(4, 120, 87); // emerald-700
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.text("RECORRIDO VISUAL", 156, kpiY + 7);
+      doc.setFontSize(16);
+      doc.text(`${totalScanTimeSec} s`, 156, kpiY + 17);
 
       // Footer Page 1
       doc.setTextColor(148, 163, 184);
@@ -235,7 +273,22 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
       doc.setFontSize(13);
       doc.text("DIAGNÓSTICO HEURÍSTICO Y RECOMENDACIONES CRO", 15, 15);
 
-      let currentY = 36;
+      let currentY = 32;
+
+      // Biometric Timing Highlight Box
+      doc.setFillColor(243, 244, 256); // indigo-50/80
+      doc.roundedRect(15, currentY, pageWidth - 30, 18, 3, 3, "F");
+      doc.setTextColor(67, 56, 202);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.text(`TIEMPOS BIOMÉTRICOS & RETENCIÓN DE MIRADA:`, 20, currentY + 6);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(51, 65, 85);
+      doc.setFontSize(8);
+      doc.text(`• Tiempo de Reacción Inicial: ${firstFixationMs} ms  |  • Duración Recorrido Visual: ${totalScanTimeSec} s`, 20, currentY + 12);
+      doc.text(`• Mayor Detención (Dwell Time): ${topDwellArea.name} (${topDwellArea.weight}% retención)`, pageWidth - 105, currentY + 12);
+
+      currentY += 24;
 
       // 1. Executive Summary
       doc.setTextColor(15, 23, 42);
@@ -764,49 +817,111 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
       {/* KPI metrics and cognitive report (5 columns) */}
       <div className="lg:col-span-5 flex flex-col space-y-6">
         
-        {/* Guages for Clarity & Cognitive Load */}
+        {/* Guages for Clarity, Cognitive Load, Reaction Time & Scanpath Duration */}
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm grid grid-cols-2 gap-4">
           <div className="flex flex-col items-center text-center p-3 rounded-xl bg-slate-50">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Claridad Visual</span>
             <div className="relative flex items-center justify-center my-3">
-              {/* Simple elegant circular gauge */}
-              <svg className="w-20 h-20">
-                <circle cx="40" cy="40" r="34" stroke="#e2e8f0" strokeWidth="6" fill="transparent" />
+              <svg className="w-16 h-16">
+                <circle cx="32" cy="32" r="26" stroke="#e2e8f0" strokeWidth="5" fill="transparent" />
                 <circle 
-                  cx="40" cy="40" r="34" 
-                  stroke="#10b981" strokeWidth="6" fill="transparent" 
-                  strokeDasharray={`${2 * Math.PI * 34}`}
-                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - predictive.clarityScore / 100)}`}
+                  cx="32" cy="32" r="26" 
+                  stroke="#10b981" strokeWidth="5" fill="transparent" 
+                  strokeDasharray={`${2 * Math.PI * 26}`}
+                  strokeDashoffset={`${2 * Math.PI * 26 * (1 - predictive.clarityScore / 100)}`}
                   strokeLinecap="round"
-                  transform="rotate(-90 40 40)"
+                  transform="rotate(-90 32 32)"
                 />
               </svg>
-              <span className="absolute text-lg font-black text-slate-800 font-mono">{predictive.clarityScore}</span>
+              <span className="absolute text-base font-black text-slate-800 font-mono">{predictive.clarityScore}</span>
             </div>
             <p className="text-[10px] text-slate-500 leading-tight">
-              {predictive.clarityScore >= 80 ? "Diseño limpio y fácil de digerir." : "Diseño que puede requerir simplificación visual."}
+              {predictive.clarityScore >= 80 ? "Diseño limpio y fácil de digerir." : "Diseño que requiere simplificación."}
             </p>
           </div>
 
           <div className="flex flex-col items-center text-center p-3 rounded-xl bg-slate-50">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Carga Cognitiva</span>
             <div className="relative flex items-center justify-center my-3">
-              <svg className="w-20 h-20">
-                <circle cx="40" cy="40" r="34" stroke="#e2e8f0" strokeWidth="6" fill="transparent" />
+              <svg className="w-16 h-16">
+                <circle cx="32" cy="32" r="26" stroke="#e2e8f0" strokeWidth="5" fill="transparent" />
                 <circle 
-                  cx="40" cy="40" r="34" 
-                  stroke={predictive.cognitiveLoad > 60 ? "#ef4444" : "#f59e0b"} strokeWidth="6" fill="transparent" 
-                  strokeDasharray={`${2 * Math.PI * 34}`}
-                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - predictive.cognitiveLoad / 100)}`}
+                  cx="32" cy="32" r="26" 
+                  stroke={predictive.cognitiveLoad > 60 ? "#ef4444" : "#f59e0b"} strokeWidth="5" fill="transparent" 
+                  strokeDasharray={`${2 * Math.PI * 26}`}
+                  strokeDashoffset={`${2 * Math.PI * 26 * (1 - predictive.cognitiveLoad / 100)}`}
                   strokeLinecap="round"
-                  transform="rotate(-90 40 40)"
+                  transform="rotate(-90 32 32)"
                 />
               </svg>
-              <span className="absolute text-lg font-black text-slate-800 font-mono">{predictive.cognitiveLoad}</span>
+              <span className="absolute text-base font-black text-slate-800 font-mono">{predictive.cognitiveLoad}</span>
             </div>
             <p className="text-[10px] text-slate-500 leading-tight">
-              {predictive.cognitiveLoad < 40 ? "Esfuerzo mental muy bajo." : "Sobrecarga de información media-alta."}
+              {predictive.cognitiveLoad < 40 ? "Esfuerzo mental muy bajo." : "Sobrecarga de información media."}
             </p>
+          </div>
+
+          <div className="flex flex-col items-center text-center p-3 rounded-xl bg-indigo-50/60 border border-indigo-100">
+            <Zap className="w-4 h-4 text-indigo-600 mb-1" />
+            <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider">Tiempo de Reacción</span>
+            <span className="text-lg font-black text-indigo-600 font-mono my-1">{firstFixationMs} ms</span>
+            <p className="text-[9px] text-indigo-700 leading-tight">
+              Fijación foveal inicial al ver la imagen
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center text-center p-3 rounded-xl bg-emerald-50/60 border border-emerald-100">
+            <Clock className="w-4 h-4 text-emerald-600 mb-1" />
+            <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider">Recorrido Visual</span>
+            <span className="text-lg font-black text-emerald-600 font-mono my-1">{totalScanTimeSec} seg</span>
+            <p className="text-[9px] text-emerald-700 leading-tight">
+              Tiempo total estimado del flujo de mirada
+            </p>
+          </div>
+        </div>
+
+        {/* Biometric Timing & Dwell Callout Box */}
+        <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 text-white space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+            <div className="flex items-center space-x-2">
+              <Clock className="w-4 h-4 text-amber-400" />
+              <h5 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                Tiempos Biométricos y Retención de Mirada
+              </h5>
+            </div>
+            <span className="text-[9px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded font-mono font-bold">
+              Gemini Vision AI
+            </span>
+          </div>
+
+          <div className="space-y-2 text-xs">
+            <div className="flex items-start justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block">Tiempo de Reacción Visual (TTFF)</span>
+                <span className="text-slate-200 text-xs">Captura foveal inicial del ojo al exponerse a la pieza</span>
+              </div>
+              <span className="font-mono font-black text-indigo-400 text-sm ml-2 shrink-0">{firstFixationMs} ms</span>
+            </div>
+
+            <div className="flex items-start justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold block">Duración del Recorrido Visual</span>
+                <span className="text-slate-200 text-xs">Tiempo total estimado para escanear todo el flujo de fijaciones</span>
+              </div>
+              <span className="font-mono font-black text-emerald-400 text-sm ml-2 shrink-0">{totalScanTimeSec} s</span>
+            </div>
+
+            <div className="flex items-start justify-between bg-amber-950/40 p-2.5 rounded-xl border border-amber-800/50">
+              <div>
+                <span className="text-[10px] text-amber-400 font-bold block">Zona de Mayor Detención (Dwell Time)</span>
+                <span className="text-amber-200 text-xs font-bold block truncate max-w-[180px]" title={topDwellArea.name}>
+                  {topDwellArea.name}
+                </span>
+              </div>
+              <span className="font-mono font-black text-amber-300 text-xs bg-amber-900/60 px-2 py-1 rounded shrink-0">
+                {topDwellArea.weight}% atención
+              </span>
+            </div>
           </div>
         </div>
 

@@ -48,6 +48,9 @@ export interface PredictiveData {
   cognitiveLoad: number;    // 0-100 (lower is better, less cognitive overload)
   focusAreas: FocusPoint[];
   gazePath: GazePathPoint[];
+  firstFixationTimeMs?: number;
+  totalScanTimeSec?: number;
+  maxDwellZone?: { name: string; weight: number; dwellTimeMs?: number };
   spellingAudit?: SpellingAudit;
   reportText: {
     summary: string;

@@ -82,10 +82,15 @@ export function setMasterPin(newPin: string): void {
 
 // Validate Key
 export function validateAccessKey(inputCode: string): { valid: boolean; key?: AccessKey; reason?: string } {
-  const codeTrimmed = inputCode.trim().toUpperCase();
+  if (!inputCode || !inputCode.trim()) {
+    return { valid: false, reason: "Por favor ingresa tu clave o nombre de usuario de acceso." };
+  }
+
+  const codeTrimmed = inputCode.trim();
+  const codeUpper = codeTrimmed.toUpperCase();
   const masterPin = getMasterPin();
 
-  if (codeTrimmed === masterPin.toUpperCase()) {
+  if (codeUpper === masterPin.toUpperCase()) {
     return {
       valid: true,
       key: {
@@ -99,11 +104,27 @@ export function validateAccessKey(inputCode: string): { valid: boolean; key?: Ac
     };
   }
 
+  // Normalizer for accent and space insensitive search (e.g. "Francis Añazco" -> "francisanazco")
+  const normalizeStr = (str: string) => 
+    str.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+
+  const normalizedInput = normalizeStr(codeTrimmed);
+
   const keys = getAccessKeys();
-  const matchedKey = keys.find(k => k.code.toUpperCase() === codeTrimmed);
+  const matchedKey = keys.find(k => {
+    const normCode = normalizeStr(k.code);
+    const normUser = normalizeStr(k.userName);
+    return (
+      k.code.trim().toUpperCase() === codeUpper ||
+      normCode === normalizedInput ||
+      normUser === normalizedInput ||
+      k.userName.trim().toLowerCase() === codeTrimmed.toLowerCase() ||
+      (normalizedInput.length >= 4 && normUser.includes(normalizedInput))
+    );
+  });
 
   if (!matchedKey) {
-    return { valid: false, reason: "Clave de acceso no válida o inexistente." };
+    return { valid: false, reason: `Clave o usuario "${codeTrimmed}" no encontrado. Verifique la clave asignada o ingrese el nombre exacto.` };
   }
 
   if (!matchedKey.isActive) {

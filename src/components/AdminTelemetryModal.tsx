@@ -90,14 +90,21 @@ export default function AdminTelemetryModal({ onClose }: AdminTelemetryModalProp
   // Add new access key
   const handleCreateKey = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserName.trim() || !newKeyCode.trim()) {
-      alert("Por favor completa el nombre de usuario y el código de clave.");
+    if (!newUserName.trim()) {
+      alert("Por favor ingrese el Nombre de Usuario o Empresa.");
       return;
+    }
+
+    let codeToUse = newKeyCode.trim().toUpperCase();
+    if (!codeToUse) {
+      // Auto-generate based on user name + 2026 or random
+      const cleanName = newUserName.trim().split(" ")[0].toUpperCase().replace(/[^A-Z0-9]/g, "");
+      codeToUse = `${cleanName || "TEST"}2026`;
     }
 
     const created: AccessKey = {
       id: `key-${Date.now()}`,
-      code: newKeyCode.trim().toUpperCase(),
+      code: codeToUse,
       userName: newUserName.trim(),
       role: "tester",
       isActive: true,
@@ -115,7 +122,7 @@ export default function AdminTelemetryModal({ onClose }: AdminTelemetryModalProp
     setNewKeyCode("");
     setNewKeyNotes("");
     setNewKeyExpireDate("");
-    alert(`¡Clave ${created.code} creada exitosamente para ${created.userName}!`);
+    alert(`¡Clave y Usuario guardados exitosamente!\n\n• Usuario: ${created.userName}\n• Código de Clave: ${created.code}\n\nEl usuario podrá ingresar escribiendo el código "${created.code}" o su nombre "${created.userName}".`);
   };
 
   // Toggle Key Active Status

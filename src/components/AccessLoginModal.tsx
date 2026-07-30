@@ -124,7 +124,7 @@ export default function AccessLoginModal({ onLoginSuccess }: AccessLoginModalPro
               <label className="block text-xs font-bold text-slate-300 mb-1.5 flex items-center justify-between">
                 <span className="flex items-center">
                   <Key className="w-3.5 h-3.5 mr-1.5 text-indigo-400" />
-                  Clave o PIN de Acceso
+                  Clave de Acceso o Nombre Registrado
                 </span>
                 <button
                   type="button"
@@ -138,20 +138,23 @@ export default function AccessLoginModal({ onLoginSuccess }: AccessLoginModalPro
 
               <div className="relative">
                 <input
-                  type="password"
+                  type="text"
                   value={accessCode}
                   onChange={(e) => {
                     setAccessCode(e.target.value);
                     setErrorMsg(null);
                   }}
-                  placeholder="Ingrese su clave asignada..."
+                  placeholder="Ej: TEST2026, FRANCIS2026 o Francis Añazco..."
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono tracking-wider"
                   autoFocus
                 />
                 <div className="absolute right-3 top-3 text-slate-500">
-                  <Lock className="w-4 h-4" />
+                  <Key className="w-4 h-4 text-indigo-400" />
                 </div>
               </div>
+              <p className="text-[10px] text-slate-400 mt-1">
+                * Puedes ingresar utilizando el código asignado (ej: <code>NEURO2026</code>) o tu nombre completo (ej: <code>Francis Añazco</code>).
+              </p>
             </div>
 
             {/* Checkbox Aceptación Términos */}

@@ -26,7 +26,7 @@ export default function ManualDownloader() {
       // State tracker for current Y coordinate
       let currentY = 0;
 
-      // Helper function to draw page background and headers
+      // Helper function to draw page background and headers      // Footer
       const drawPageBase = (pageNum: number, totalPages: number, pageTitle: string) => {
         // Top banner
         doc.setFillColor(15, 23, 42); // slate-900
@@ -62,7 +62,7 @@ export default function ManualDownloader() {
         doc.setTextColor(100, 116, 139); // slate-500
         doc.setFont("helvetica", "italic");
         doc.setFontSize(8);
-        doc.text("OculiMind AI v1.3.0 — Manual Técnico de Usuario Oficial", margin, pageHeight - 7);
+        doc.text("OculiMind AI v2.5.0 — Manual Técnico de Usuario Oficial", margin, pageHeight - 7);
         doc.text(`Página ${pageNum} de ${totalPages}`, pageWidth - margin, pageHeight - 7, { align: "right" });
       };
 
@@ -107,7 +107,7 @@ export default function ManualDownloader() {
         return y + boxHeight + 6;
       };
 
-      const TOTAL_PAGES = 6;
+      const TOTAL_PAGES = 7;
 
       // ==============================================================
       // PÁGINA 1: PORTADA Y TABLA DE CONTENIDOS
@@ -132,8 +132,9 @@ export default function ManualDownloader() {
       doc.text("OculiMind AI", margin, 90);
 
       doc.setFontSize(13);
+      doc.setFontSize(13);
       doc.setTextColor(129, 140, 248); // indigo-400
-      doc.text("Manual Técnico de Neuromarketing & Métricas de Publicidad v2.0", margin, 100);
+      doc.text("Manual Técnico de Neuromarketing, Biometría & Social Benchmark v2.6", margin, 100);
 
       // Horizontal separator line
       doc.setFillColor(51, 65, 85);
@@ -143,13 +144,13 @@ export default function ManualDownloader() {
       doc.setTextColor(203, 213, 225); // slate-300
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      const descText = "Guía operativa y técnica oficial para la evaluación bio-cognitiva de campañas publicitarias. Incluye parámetros estandarizados para Publicidad Exterior (OOH), Páginas Web, Apps Móviles, Reels/TikTok, Meta Ads, Google Display Banners, Pruebas A/B, Matriz DCO, Emotion AI y Auditoría de Logotipos.";
+      const descText = "Guía operativa y técnica oficial para la evaluación bio-cognitiva de campañas publicitarias. Incluye parámetros estandarizados para Publicidad Exterior (OOH), Tiempos Biométricos (TTFF), Duración del Recorrido Visual, Zonas de Detención (Dwell Time), Benchmark Social Media con Ranking por Seguidores en RRSS, Gestión de Usuarios con Claves/Nombres, Meta Ads, Google Display Banners, Emotion AI y Auditoría de Logotipos.";
       const descLines = doc.splitTextToSize(descText, contentWidth);
       doc.text(descLines, margin, 114);
 
       // Metadata Info Box (Inside Cover)
       doc.setFillColor(30, 41, 59); // slate-800
-      doc.rect(margin, 142, contentWidth, 48, "F");
+      doc.rect(margin, 142, contentWidth, 50, "F");
       
       doc.setTextColor(148, 163, 184); // slate-400
       doc.setFont("helvetica", "bold");
@@ -159,11 +160,11 @@ export default function ManualDownloader() {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.setTextColor(241, 245, 249); // slate-200
-      doc.text("•  Stop-Ratio & Hook Rate (0-3s): Medición de la velocidad de detención del desplazamiento táctil en móviles.", margin + 6, 157);
-      doc.text("•  Publicidad Exterior (OOH): Regla de atención a alta velocidad (<3s) y restricción de máximo 2 elementos focales.", margin + 6, 163);
-      doc.text("•  Web & Apps Móviles: Lectura en patrón F/Z, índice de carga cognitiva y accesibilidad Thumb Zone.", margin + 6, 169);
-      doc.text("•  Formatos Publicitarios: Banners IAB Google Display (Skyscraper, Leaderboard) y Meta Safe Zones (9:16 / 1:1).", margin + 6, 175);
-      doc.text("•  Motor Algorítmico en Tiempo Real: Sincronización continua de criterios de puntuación de Meta Ads y Google Ads.", margin + 6, 181);
+      doc.text("•  Tiempos Biométricos: Medición del Tiempo de Reacción Visual (TTFF en ms) y Recorrido Ocular Total (seg).", margin + 6, 157);
+      doc.text("•  Retención & Dwell Time: Identificación automatizada de la Zona de Mayor Detención y % de atención.", margin + 6, 163);
+      doc.text("•  Benchmark RRSS & Ranking: Comparativa jerárquica por cantidad de seguidores y Tasa de Enganche (ER).", margin + 6, 169);
+      doc.text("•  Gestión de Usuarios & Claves: Control de acceso con Nombre Completo o Clave (ej: TEST2026) y PIN Maestro.", margin + 6, 175);
+      doc.text("•  Publicidad Exterior (OOH) & Digital: Reglas de 3s en movimiento, lectura en patrón F/Z y Safe Zones Meta/Google.", margin + 6, 181);
 
       // Table of Contents Header
       doc.setTextColor(255, 255, 255);
@@ -180,12 +181,12 @@ export default function ManualDownloader() {
       doc.setTextColor(226, 232, 240); // slate-200
       
       const tocItems = [
-        { label: "1. Glosario Técnico: Stop-Ratio, Hook Rate & Carga Cognitiva", page: "Pág. 2" },
+        { label: "1. Glosario Biométrico: Tiempos de Reacción, Recorrido Visual & Dwell Time", page: "Pág. 2" },
         { label: "2. Parámetros de Publicidad Exterior (OOH) & Sitios Web / Apps Móviles", page: "Pág. 3" },
         { label: "3. Análisis de Video, Reels & TikTok (Audio-Off, Safe Zones & Retención)", page: "Pág. 4" },
-        { label: "4. Hub de Anuncios Meta Ads, Google Display Banners & Matriz DCO", page: "Pág. 5" },
-        { label: "5. Monitor Algorítmico en Tiempo Real & Recalibración de Ponderaciones", page: "Pág. 5" },
-        { label: "6. Neuromarketing Empírico (Webcam, Emotion AI) & Auditoría de Logos", page: "Pág. 6" },
+        { label: "4. Hub Meta Ads, Google Display & Benchmark RRSS (Ranking de Seguidores)", page: "Pág. 5" },
+        { label: "5. Gestión de Usuarios, Claves de Acceso, PIN Maestro & Telemetría", page: "Pág. 6" },
+        { label: "6. Neuromarketing Empírico (Webcam, Emotion AI) & Auditoría de Logos", page: "Pág. 7" },
       ];
 
       tocItems.forEach((item, index) => {
@@ -203,10 +204,10 @@ export default function ManualDownloader() {
 
 
       // ==============================================================
-      // PÁGINA 2: GLOSARIO TÉCNICO DE MEDICIÓN
+      // PÁGINA 2: GLOSARIO TÉCNICO Y TIEMPOS BIOMÉTRICOS
       // ==============================================================
       doc.addPage();
-      drawPageBase(2, TOTAL_PAGES, "Glosario Técnico de Medición & Métricas");
+      drawPageBase(2, TOTAL_PAGES, "Glosario Biométrico & Tiempos de Atención");
 
       currentY = 38;
 
@@ -226,13 +227,14 @@ export default function ManualDownloader() {
       );
 
       currentY = drawInfoBox(
-        "Métricas Principales de Atención y Retención:",
+        "Métricas Principales de Atención, Tiempos & Retención:",
         [
-          "• STOP-RATIO (Tasa de Detención del Scroll): Porcentaje de usuarios que interrumpe el desplazamiento táctil del pulgar en el feed al detectar un elemento visual con alto contraste o disparador emocional (>70% es Excelente).",
-          "• HOOK RATE (Tasa de Enganche a 3s): Capacidad del video o imagen de retener la mirada del usuario durante los primeros 3 segundos de exposición sin que abandone la pantalla.",
-          "• ÍNDICE DE CARGA COGNITIVA (Cognitive Load): Cantidad de esfuerzo mental necesario para procesar la pieza. Valores superiores a 65% indican saturación visual y provocan fatiga o rechazo.",
-          "• DWELL TIME (Tiempo de Permanencia): Tiempo promedio en milisegundos que las fijaciones foveales se mantienen enfocadas en las zonas clave del mensaje antes de saltar a otro elemento.",
-          "• RUTA SACÁDICA (Focus Path): Secuencia ordenada de saltos oculares que realiza la vista al explorar la composición (de mayor a menor prominencia)."
+          "• TIEMPO DE REACCIÓN VISUAL (TTFF - Time to First Fixation): Tiempo medido en milisegundos (ms) que tarda el ojo en captar la primera fijación foveal en la pieza (óptimo: <250 ms).",
+          "• DURACIÓN DEL RECORRIDO VISUAL: Tiempo total en segundos (s) estimado para completar la trayectoria sacádica de fijaciones a lo largo del lienzo.",
+          "• ZONA DE MAYOR DETENCIÓN (Max Dwell Zone): Identificación de la zona (Titular, Producto, CTA) donde la mirada permanece estancada o enfocada por mayor tiempo con su % de atención.",
+          "• STOP-RATIO (Tasa de Detención del Scroll): Porcentaje de usuarios que interrumpe el desplazamiento táctil del pulgar en el feed al detectar un elemento visual de alto impacto (>70% es Excelente).",
+          "• HOOK RATE (Tasa de Enganche a 3s): Capacidad del creativo para retener la mirada del espectador durante los primeros 3 segundos clave de exposición.",
+          "• ÍNDICE DE CARGA COGNITIVA (Cognitive Load): Cantidad de esfuerzo mental necesario para procesar la pieza. Valores superiores a 65% indican saturación visual y provocan rechazo."
         ],
         currentY,
         [79, 70, 229]
@@ -358,9 +360,10 @@ export default function ManualDownloader() {
       );
 
       currentY = drawInfoBox(
-        "Optimizaciones de Pauta y Creativos Dinámicos (DCO):",
+        "Optimizaciones de Pauta, Creativos Dinámicos (DCO) & Benchmark RRSS:",
         [
-          "• MATRIZ DCO (Dynamic Creative Optimization): Evalúa múltiples combinaciones de imágenes, titulares y botones CTA para determinar la combinación con mayor probabilidad de conversión previa al lanzamiento.",
+          "• RANKING POR CANTIDAD DE SEGUIDORES (RRSS): Ordenamiento jerárquico automático de marcas competidoras y marca propia por volumen de comunidad y Tasa de Enganche (Engagement Rate - ER).",
+          "• MATRIZ DCO (Dynamic Creative Optimization): Evalúa múltiples combinaciones de imágenes, titulares y botones CTA para determinar la variante con mayor probabilidad de conversión.",
           "• REGLA DEL 20% DE TEXTO EN META: Verifica que la cantidad de texto superpuesto no sobrepase el umbral que causa penalización en el costo por mil impresiones (eCPM).",
           "• SUITE GOOGLE DISPLAY IAB: Diagnóstico de legibilidad para los 12 formatos estandarizados de la red de display de Google."
         ],
@@ -387,17 +390,53 @@ export default function ManualDownloader() {
 
 
       // ==============================================================
-      // PÁGINA 6: NEUROMARKETING EMPÍRICO Y AUDITORÍA DE LOGOS
+      // PÁGINA 6: GESTIÓN DE USUARIOS Y CONTROL DE TELEMETRÍA
       // ==============================================================
       doc.addPage();
-      drawPageBase(6, TOTAL_PAGES, "Neuromarketing Empírico & Logo Review");
+      drawPageBase(6, TOTAL_PAGES, "Gestión de Usuarios, Claves & Auditoría");
 
       currentY = 38;
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(15, 23, 42);
-      doc.text("7. SEGUIMIENTO OCULAR POR WEBCAM Y EMOTION AI", margin, currentY);
+      doc.text("7. SISTEMA DE GESTIÓN DE USUARIOS Y CLAVES DE ACCESO", margin, currentY);
+
+      doc.setFillColor(99, 102, 241); // Indigo-500
+      doc.rect(margin, currentY + 2, 45, 1, "F");
+
+      currentY += 8;
+
+      currentY = writeParagraph(
+        "OculiMind AI integra un robusto módulo de administración de claves y control de telemetría de uso para agencias, equipos de diseño y clientes corporativos:",
+        currentY
+      );
+
+      currentY = drawInfoBox(
+        "Funcionalidades de Control de Acceso y Claves Temporales:",
+        [
+          "• INGRESO FLEXIBLE POR CÓDIGO O NOMBRE: Los usuarios autorizados pueden iniciar sesión escribiendo su código asignado (ej: TEST2026, FRANCIS2026) o su nombre de usuario/empresa registrado (ej: Francis Añazco).",
+          "• AUTENTICACIÓN POR PIN MAESTRO DE ADMINISTRADOR: El botón 'Gestión de Usuarios & Claves' requiere la introducción del PIN Maestro para usuarios sin rol admin, protegiendo las credenciales de la empresa.",
+          "• ASIGNACIÓN DE EXPIRACIÓN Y LÍMITE DE USO: Es posible crear claves activas con límite de fecha y notas específicas por cliente.",
+          "• TELEMETRÍA DE SESIONES Y AUDITORÍA EN TIEMPO REAL: Registro detallado de logins, tiempo en plataforma, materiales publicitarios subidos y reportes PDF exportados."
+        ],
+        currentY,
+        [99, 102, 241]
+      );
+
+
+      // ==============================================================
+      // PÁGINA 7: NEUROMARKETING EMPÍRICO Y AUDITORÍA DE LOGOS
+      // ==============================================================
+      doc.addPage();
+      drawPageBase(7, TOTAL_PAGES, "Neuromarketing Empírico & Logo Review");
+
+      currentY = 38;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(15, 23, 42);
+      doc.text("8. SEGUIMIENTO OCULAR POR WEBCAM Y EMOTION AI", margin, currentY);
 
       doc.setFillColor(16, 185, 129); // Emerald
       doc.rect(margin, currentY + 2, 45, 1, "F");
@@ -414,7 +453,7 @@ export default function ManualDownloader() {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
       doc.setTextColor(15, 23, 42);
-      doc.text("8. AUDITORÍA TÉCNICA DE LOGOTIPOS Y MARCA", margin, currentY);
+      doc.text("9. AUDITORÍA TÉCNICA DE LOGOTIPOS Y MARCA", margin, currentY);
 
       doc.setFillColor(79, 70, 229); // Indigo
       doc.rect(margin, currentY + 2, 45, 1, "F");
