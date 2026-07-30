@@ -286,7 +286,7 @@ export default function BenchmarkView() {
   const [productLineOrLaunch, setProductLineOrLaunch] = useState<string>("");
   const [brandObjective, setBrandObjective] = useState<BrandBenchmarkObjective>("new_product_launch");
   const [brandIndustry, setBrandIndustry] = useState<string>(AVAILABLE_INDUSTRIES[0]);
-  const [selectedCountries, setSelectedCountries] = useState<string[]>(["México", "Colombia", "Chile"]);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [customCountryInput, setCustomCountryInput] = useState<string>("");
   const [selectedDimensions, setSelectedDimensions] = useState<BrandResearchDimension[]>([
     "social_media",
@@ -306,7 +306,7 @@ export default function BenchmarkView() {
     setProductLineOrLaunch("");
     setNewTitle("");
     setNewCategory("Consumo Masivo & Retail");
-    setSelectedCountries(["México", "Colombia", "Chile"]);
+    setSelectedCountries([]);
     setCustomCountryInput("");
     setSelectedDimensions([
       "social_media",
@@ -352,9 +352,7 @@ export default function BenchmarkView() {
   // Toggle Country selection
   const handleToggleCountry = (country: string) => {
     if (selectedCountries.includes(country)) {
-      if (selectedCountries.length > 1) {
-        setSelectedCountries(selectedCountries.filter(c => c !== country));
-      }
+      setSelectedCountries(selectedCountries.filter(c => c !== country));
     } else {
       setSelectedCountries([...selectedCountries, country]);
     }
@@ -1236,14 +1234,18 @@ export default function BenchmarkView() {
                     <span className="text-[11px] text-slate-400 font-bold mr-1">
                       Países seleccionados ({selectedCountries.length}):
                     </span>
-                    {selectedCountries.map((country) => (
-                      <span
-                        key={country}
-                        className="bg-indigo-900/60 border border-indigo-500/40 text-indigo-200 px-3 py-1 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs"
-                      >
-                        <Globe2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                        <span>{country}</span>
-                        {selectedCountries.length > 1 && (
+                    {selectedCountries.length === 0 ? (
+                      <span className="text-xs text-amber-400 font-medium italic bg-amber-950/40 border border-amber-500/30 px-3 py-1 rounded-xl">
+                        Ningún país seleccionado por defecto. Selecciona uno o varios del menú desplegable o accesos rápidos arriba.
+                      </span>
+                    ) : (
+                      selectedCountries.map((country) => (
+                        <span
+                          key={country}
+                          className="bg-indigo-900/60 border border-indigo-500/40 text-indigo-200 px-3 py-1 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-xs animate-fadeIn"
+                        >
+                          <Globe2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                          <span>{country}</span>
                           <button
                             type="button"
                             onClick={() => handleToggleCountry(country)}
@@ -1252,9 +1254,9 @@ export default function BenchmarkView() {
                           >
                             ×
                           </button>
-                        )}
-                      </span>
-                    ))}
+                        </span>
+                      ))
+                    )}
                   </div>
                 </div>
 
