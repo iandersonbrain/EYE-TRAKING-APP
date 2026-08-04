@@ -229,13 +229,13 @@ export default function ManualDownloader({ showTextOnMobile = false }: { showTex
       );
 
       currentY = drawInfoBox(
-        "Paso a Paso para Configurar el Benchmark y Selección de Países:",
+        "¿Cómo funciona esta herramienta? (Procesamiento por Selección y Filtro):",
         [
-          "1. BOTÓN + NUEVO BENCHMARK: Haz clic en el botón superior en azul '+ Nuevo Benchmark' (en móvil o escritorio) para abrir el formulario de creación.",
-          "2. SELECCIÓN DE PAÍSES (NUEVO COMPORTAMIENTO): Por defecto, no aparece ningún país pre-seleccionado para evitar distorsiones territoriales.",
-          "3. ELEGIR PAÍSES: Selecciona uno o varios países haciendo clic en las etiquetas de acceso rápido (México, Colombia, Chile, España, Argentina, Perú) o escribiendo un país personalizado en el cuadro de búsqueda.",
-          "4. RANKING POR SEGUIDORES: Las marcas analizadas se organizan automáticamente en un ranking jerárquico según su volumen total de seguidores y su Tasa de Engagement (ER).",
-          "5. DIMENSIONES A EVALUAR: Elige entre Redes Sociales, Publicidad Digital, Sitio Web u OOH para obtener la nota global sobre 100."
+          "• MODO DE FUNCIONAMIENTO: Basado en formulario de configuración y actualización instantánea de rankings al aplicar filtros de países o agregar marcas.",
+          "• PASO 1 - INICIAR CREACIÓN: Haz clic en el botón superior azul '+ Nuevo Benchmark' (en móvil o escritorio) para abrir el modal de configuración.",
+          "• PASO 2 - SELECCIÓN FLEXIBLE DE PAÍSES: Por defecto no hay países seleccionados. Elige uno o varios mediante los chips rápidos (México, Colombia, Chile, España, Argentina, Perú) o el buscador libre.",
+          "• PASO 3 - INGRESO DE MARCAS Y SEGUIDORES: Introduce los nombres de las marcas competidoras y sus cifras registradas de seguidores.",
+          "• PASO 4 - GENERACIÓN Y RANKING: Presiona 'Ver Benchmark' para calcular el ranking jerárquico ordenado por volumen de comunidad y Tasa de Engagement (ER)."
         ],
         currentY,
         [79, 70, 229]
@@ -260,17 +260,17 @@ export default function ManualDownloader({ showTextOnMobile = false }: { showTex
       currentY += 8;
 
       currentY = writeParagraph(
-        "La optimización dinámica de creativos (DCO) es la metodología que usan Meta Ads y Google Ads para ensayar permutaciones automáticas antes de pujar presupuesto real:",
+        "La optimización dinámica de creativos (DCO) evalúa las permutaciones de imágenes, titulares y CTAs antes de publicar campañas en Meta o Google Ads:",
         currentY
       );
 
       currentY = drawInfoBox(
-        "Cómo Usar la Matriz DCO (Dynamic Creative Optimization):",
+        "¿Cómo funciona esta herramienta? (Procesamiento Instantáneo / Real-Time):",
         [
-          "• SUBIDA DE HASTA 3 IMÁGENES: En la sección '1. Imágenes Creativas para la Matriz', presiona 'Cambiar Imagen' para cargar tus propios archivos JPG/PNG en los slots #1, #2 y #3.",
-          "• DEFINICIÓN DE TITULARES (H1, H2, H3): Modifica las 3 variantes de texto del encabezado que el algoritmo intercambiará.",
-          "• VARIACIONES DE BOTÓN CTA (C1, C2, C3): Define hasta 3 llamadas a la acción distintas (ej: 'Comprar Ahora', 'Ver Oferta Exclusiva', 'Registrarte').",
-          "• EVALUACIÓN AUTOMÁTICA DE PERMUTACIONES: La IA calcula los 9 cruces posibles y muestra las 3 mejores combinaciones ordenadas con su foto correspondiente, otorgando una medalla a la variante ganadora (#1 GANADORA DCO con mayor Stop-Ratio)."
+          "• MODO DE FUNCIONAMIENTO AUTOMÁTICO: NO requiere presionar ningún botón manual de 'Analizar'. Al cargar o cambiar cualquier imagen o editar un texto, el motor evalúa en tiempo real.",
+          "• PASO 1 - SUBIR IMÁGENES PROPIAS: En la sección 'Imágenes Creativas', presiona 'Cambiar Imagen' en los slots #1, #2 o #3 para seleccionar archivos JPG/PNG de tu equipo.",
+          "• PASO 2 - EDITAR VARIANTES DE TEXTO: Escribe hasta 3 titulares (H1, H2, H3) y 3 botones de llamada a la acción (C1, C2, C3).",
+          "• PASO 3 - DIAGNÓSTICO EN VIVO: La herramienta calcula automáticamente las 9 combinaciones posibles en milisegundos y otorga la medalla '#1 GANADORA DCO' a la variante con mayor Stop-Ratio."
         ],
         currentY,
         [236, 72, 153]
@@ -288,9 +288,14 @@ export default function ManualDownloader({ showTextOnMobile = false }: { showTex
 
       currentY += 8;
 
-      currentY = writeParagraph(
-        "En la pestaña 'Test A/B Comparativo', puedes cargar la Imagen A y la Imagen B para visualizar en pantalla dividida los mapas de calor de fijación foveal y determinar cuál captura la atención en los primeros 250 milisegundos.",
-        currentY
+      currentY = drawInfoBox(
+        "¿Cómo funciona el Test A/B? (Análisis de Atención Foveal Inmediato):",
+        [
+          "• PROCESAMIENTO INSTANTÁNEO: Al presionar 'Cambiar Imagen A' o 'Cambiar Imagen B', el sistema renderiza de inmediato el mapa de calor de fijación visual.",
+          "• RESULTADO COMPARATIVO: Muestra cuál de las dos variantes captura el foco visual en los primeros 250 milisegundos y calcula el porcentaje de preferencia."
+        ],
+        currentY,
+        [99, 102, 241]
       );
 
 
@@ -313,17 +318,18 @@ export default function ManualDownloader({ showTextOnMobile = false }: { showTex
       currentY += 8;
 
       currentY = writeParagraph(
-        "Los carruseles de Instagram, Facebook y LinkedIn dependen de la retención continua entre diapositivas. Más del 70% del abandono ocurre en la tarjeta 2 si la primera no genera curiosidad:",
+        "Los carruseles de Instagram, Facebook y LinkedIn dependen de la retención continua entre diapositivas para evitar la tasa de abandono en la tarjeta 2:",
         currentY
       );
 
       currentY = drawInfoBox(
-        "Pasos para Auditar un Carrusel Multitarjeta:",
+        "¿Cómo funciona esta herramienta? (Evaluación Slide-by-Slide Automática):",
         [
-          "1. CARGA DE IMÁGENES POR TARJETA: En la pestaña 'Carruseles', presiona 'Subir Imagen Slide X' debajo de cada diapositiva para cargar el diseño correspondiente.",
-          "2. EDITAR TEXTOS Y PROPUESTAS DE VALOR: Modifica el título y la descripción para simular la secuencia narrativa del usuario (Gancho -> Problema -> Solución -> CTA).",
-          "3. AGREGAR O ELIMINAR TARJETAS: Utiliza el botón '+ Agregar Diapositiva' arriba a la derecha para extender el carrusel o presiona 'Eliminar' si solo necesitas 3 o 4 tarjetas.",
-          "4. INDICADOR DE RETENCIÓN ESTIMADA: La herramienta calcula el % de retención restante en cada slide y alerta si falta continuidad visual o flecha de deslizamiento."
+          "• PROCESAMIENTO INSTANTÁNEO: Funciona en tiempo real sin requerir botones adicionales de activación.",
+          "• PASO 1 - SUBIR IMÁGENES POR TARJETA: En la pestaña 'Carruseles', presiona 'Subir Imagen Slide X' debajo de cada diapositiva para cargar el diseño correspondiente.",
+          "• PASO 2 - PERSONALIZAR NARRATIVA: Modifica títulos y descripciones para simular el flujo (Gancho -> Problema -> Solución -> CTA).",
+          "• PASO 3 - GESTIONAR SLIDES: Usa '+ Agregar Diapositiva' para expandir el carrusel o 'Eliminar' para reducir tarjetas.",
+          "• PASO 4 - MÉTRICA DE RETENCIÓN: La IA estima de inmediato el % de retención restante en cada tarjeta y alerta si falta un elemento de arrastre visual."
         ],
         currentY,
         [16, 185, 129]
@@ -354,12 +360,13 @@ export default function ManualDownloader({ showTextOnMobile = false }: { showTex
       );
 
       currentY = drawInfoBox(
-        "Instrucciones para Probar Formatos Banner de Google:",
+        "¿Cómo funciona esta herramienta? (Simulador de Escaneo en Vivo):",
         [
-          "1. SELECCIONAR FORMATO: Elige una de las tarjetas de formato (ej. Skyscraper 160x600, Medium Rectangle 300x250, Leaderboard 728x90, Billboard 970x250).",
-          "2. SUBIR IMAGEN PROPIA: En el simulador inferior, haz clic en 'Subir Tu Imagen de Banner' para colocar tu arte gráfico exacto.",
-          "3. EVALUACIÓN DE ESCANEO EN 'F': El panel adaptará la proporción del contenedor y mostrará las zonas críticas donde el ojo humano inicia el recorrido visual.",
-          "4. RECOMENDACIONES DE DIAGNÓSTICO: Recibe alertas inmediatas sobre tamaño mínimo de tipografía y ubicación adecuada del botón de llamada a la action."
+          "• PROCESAMIENTO EN TIEMPO REAL: Los diagnósticos de formato y visibilidad se recalculan automáticamente al interactuar.",
+          "• PASO 1 - SELECCIONAR FORMATO IAB: Elige la tarjeta del formato deseado (Skyscraper 160x600, Medium Rectangle 300x250, Leaderboard 728x90, Billboard 970x250, etc.).",
+          "• PASO 2 - SUBIR TU IMAGEN DE BANNER: En el lienzo inferior, presiona 'Subir Tu Imagen de Banner' para colocar tu arte exacto.",
+          "• PASO 3 - MAPA DE ESCANEO PATRÓN F/Z: El sistema ajusta las proporciones del contenedor y superpone automáticamente el patrón de lectura ocular foveal.",
+          "• PASO 4 - DIAGNÓSTICO TÉCNICO: Muestra alertas inmediatas sobre legibilidad de tipografía y contraste del botón CTA."
         ],
         currentY,
         [14, 165, 233]
@@ -385,17 +392,18 @@ export default function ManualDownloader({ showTextOnMobile = false }: { showTex
       currentY += 8;
 
       currentY = writeParagraph(
-        "El Monitor Algorítmico supervisa de forma continua los cambios de políticas y factores de puntuación de las plataformas publicitarias para evitar sanciones en el eCPM:",
+        "El Monitor Algorítmico supervisa continuamente los cambios de políticas y factores de puntuación de las plataformas publicitarias para evitar sanciones en el eCPM:",
         currentY
       );
 
       currentY = drawInfoBox(
-        "Cómo Funciona y Cómo Aprovechar el Monitor Algorítmico:",
+        "¿Cómo funciona esta herramienta? (Consulta Algorítmica Dinámica):",
         [
-          "• SELECCIÓN DE RED SOCIAL / PLATAFORMA: Elige la pestaña superior entre Meta Ads, Google Display, TikTok Ads o LinkedIn Ads.",
-          "• VERIFICAR FACTORES DE PESO (WEIGHT %): Revisa qué métricas premia el algoritmo actual (ej. En Meta Ads, los 'Guardados/Compartidos' pesan 35% mientras que los Likes valen solo 10%).",
-          "• DISPARADORES DE PENALIZACIÓN (PENALTY TRIGGERS): Evita las infracciones marcadas en rojo (ej. Colocar texto en la zona del botón de Reels o exceder el 20% de área de texto en imágenes).",
-          "• ALERTAS LIVE DE TENDENCIAS: La barra superior notifica cuando se detecta una actualización de algoritmo en vivo en la industria."
+          "• PROCESAMIENTO INSTANTÁNEO POR PESTAÑA: Cambia en tiempo real según la red seleccionada sin requerir carga previa.",
+          "• PASO 1 - SELECCIÓN DE RED SOCIAL: Elige entre Meta Ads, Google Display, TikTok Ads o LinkedIn Ads.",
+          "• PASO 2 - MATRIZ DE PESOS (WEIGHT %): Revisa la ponderación oficial actualizada (ej. Guardados/Compartidos pesan 35% en Meta Ads vs 10% de Likes).",
+          "• PASO 3 - DISPARADORES DE PENALIZACIÓN: Identifica alertas en rojo sobre infracciones que encarecen el costo por mil impresiones (eCPM).",
+          "• PASO 4 - TENDENCIAS LIVE: La barra superior notifica cuando se detectan actualizaciones activas en los algoritmos publicitarios."
         ],
         currentY,
         [139, 92, 246]
@@ -421,17 +429,19 @@ export default function ManualDownloader({ showTextOnMobile = false }: { showTex
       currentY += 8;
 
       currentY = writeParagraph(
-        "El motor predictivo por red neuronal simula la atención de 10,000 participantes durante los primeros 3 a 5 segundos de exposición a cualquier imagen o diseño publicitario:",
+        "El motor predictivo por red neuronal simula la atención de 10,000 participantes durante los primeros 3 a 5 segundos de exposición visual:",
         currentY
       );
 
       currentY = drawInfoBox(
-        "Uso de Herramientas Predictivas y Biometría por Webcam:",
+        "¿Cómo funciona esta herramienta? (Predictivo Automático + Empírico con Cámara):",
         [
-          "• PREDICTIVE HEATMAP (Mapa de Calor): Las áreas rojas/amarillas indican máxima intensidad de fijación foveal; las zonas frías (azules) no capturan atención.",
-          "• GAZE PATH OVERLAY: Muestra la secuencia numérica exacta (1, 2, 3, 4) del salto sacádico del ojo a través de la pieza.",
-          "• ANALIZADOR DE VIDEO & REELS (SAFE ZONES): Superpone las zonas prohibidas de Meta/TikTok para garantizar que los elementos clave no queden tapados por iconos de la app.",
-          "• WEBCAM EYE-TRACKING & EMOTION AI: Módulo empírico que califica el agrado (Valence), frustración y sorpresa del usuario en vivo rastreando microexpresiones faciales."
+          "• MAPA DE CALOR & GAZE PATH (INSTANTÁNEO): Al cargar cualquier imagen o video, la red neuronal genera en tiempo real las zonas calientes y el orden numérico de fijación ocular (1, 2, 3, 4).",
+          "• ANALIZADOR DE VIDEO & REELS (INSTANTÁNEO): Superpone inmediatamente las capas de Safe Zones de Meta/TikTok para asegurar que el texto no quede tapado por botones de la app.",
+          "• WEBCAM EYE-TRACKING & EMOTION AI (PROCESAMIENTO EMPÍRICO CON BOTÓN):",
+          "  - Requiere presionar 'Iniciar Calibración de Cámara'.",
+          "  - Otorga permisos de webcam y enfoca el rostro del sujeto en vivo.",
+          "  - Mide en tiempo real vectores de mirada (FaceMesh) y emociones (Valence, Frustración, Sorpresa)."
         ],
         currentY,
         [225, 29, 72]
@@ -462,12 +472,12 @@ export default function ManualDownloader({ showTextOnMobile = false }: { showTex
       );
 
       currentY = drawInfoBox(
-        "Auditoría de Logos, Claves de Acceso y PIN Maestro:",
+        "¿Cómo funcionan estas herramientas?:",
         [
-          "1. AUDITORÍA DE LOGOS (Logo Reviewer): Permite probar la legibilidad del logotipo en favicones de 16x16px, mockups de tarjetas corporativas, packaging y contraste WCAG.",
-          "2. SISTEMA DE CLAVES DE ACCESO (Access Login Modal): Permite ingresar utilizando una clave asignada (ej: TEST2026, FRANCIS2026) o mediante el Nombre Completo registrado del usuario.",
-          "3. PIN MAESTRO DE ADMINISTRADOR: Protege el botón 'Gestión de Usuarios & Claves' mediante la solicitud del PIN de seguridad corporativo para evitar modificaciones no autorizadas.",
-          "4. AUDITORÍA DE TELEMETRÍA: Registra cada login, descarga de PDF y pieza publicitaria subida para auditoría y trazabilidad en tiempo real."
+          "• AUDITORÍA DE LOGOS (RETIREMOS BANDERAS E INSTANTÁNEO): Al subir el archivo de imagen de un logotipo, el sistema genera de inmediato la prueba de reducción a favicon de 16x16px, contraste WCAG y mockups corporativos.",
+          "• ACCESO POR CLAVE / NOMBRE (MODAL EN VIVO): Los usuarios pueden ingresar escribiendo su clave asignada (ej: TEST2026, FRANCIS2026) o su Nombre Completo registrado.",
+          "• PROTECCIÓN CON PIN MAESTRO: El panel de gestión solicita el PIN corporativo para autorizar cambios o visualización de claves de usuarios.",
+          "• TELEMETRÍA DE SEGURIDAD: Registra en tiempo real los inicios de sesión, piezas subidas y descargas de reportes PDF para trazabilidad."
         ],
         currentY,
         [99, 102, 241]

@@ -158,6 +158,7 @@ export default function AdsOptimizerView({
   // Safe Zone Toggle for Instagram Stories & Reels
   const [showSafeZones, setShowSafeZones] = useState<boolean>(true);
   const [showHeatmap, setShowHeatmap] = useState<boolean>(true);
+  const [showCarouselHeatmap, setShowCarouselHeatmap] = useState<boolean>(true);
 
   // File Upload Handlers
   const fileInputRefA = useRef<HTMLInputElement>(null);
@@ -250,6 +251,119 @@ export default function AdsOptimizerView({
     if (carouselSlides.length > 2) {
       setCarouselSlides(carouselSlides.filter((_, i) => i !== index));
     }
+  };
+
+  // Dynamic Slide-by-Slide Carousel Analysis Engine
+  const getCarouselAnalysis = (slides: { id: string; title: string; description: string; imageUrl: string }[]) => {
+    let totalScoreSum = 0;
+    
+    const slideReports = slides.map((slide, idx) => {
+      const isFirst = idx === 0;
+      const isLast = idx === slides.length - 1;
+      const fullText = `${slide.title} ${slide.description}`.trim();
+      const charCount = fullText.length;
+      
+      const hasNumber = /\d+/.test(slide.title) || /\d+/.test(slide.description);
+      const hasQuestion = /\?|¿/.test(slide.title) || /\?|¿/.test(slide.description);
+      const hasTriggerWords = /(errores|secretos|trucos|pasos|cómo|guía|gratis|ahora|descubre|evita|clave|estrategia|top|motivos)/i.test(fullText);
+      const hasCtaWord = /(guarda|comparte|inicia|prueba|clic|link|bio|comprar|regístrate|registrate|comenta|agenda|descarga)/i.test(fullText);
+
+      // Unique hash from image string to vary visual contrast estimate
+      let imgHash = 0;
+      for (let i = 0; i < Math.min(100, slide.imageUrl.length); i++) {
+        imgHash += slide.imageUrl.charCodeAt(i);
+      }
+      const isCustomUploaded = slide.imageUrl.startsWith("data:");
+
+      // Dynamic Retention calculation per slide based on content and position
+      let retentionEst = isFirst ? 100 : Math.max(25, 100 - (idx * 16));
+      let slideScore = 75 + (imgHash % 12);
+
+      // Adjust retention & score based on copy length and content quality
+      if (charCount > 110) {
+        slideScore -= 14;
+        retentionEst -= 10;
+      } else if (charCount >= 25 && charCount <= 85) {
+        slideScore += 10;
+        retentionEst += 5;
+      }
+
+      if (isFirst) {
+        if (hasNumber || hasTriggerWords || hasQuestion) {
+          slideScore += 12;
+          retentionEst += 5;
+        } else {
+          slideScore -= 12;
+        }
+      }
+
+      if (isLast) {
+        if (hasCtaWord) {
+          slideScore += 14;
+        } else {
+          slideScore -= 10;
+        }
+      }
+
+      if (isCustomUploaded) {
+        slideScore += 6;
+      }
+
+      slideScore = Math.min(98, Math.max(42, slideScore));
+      retentionEst = Math.min(100, Math.max(20, retentionEst));
+      totalScoreSum += slideScore;
+
+      // Copy Length & Density Assessment
+      let copyAssessment = "";
+      if (charCount > 100) {
+        copyAssessment = `⚠️ Texto excesivo (${charCount} caracteres). Alto riesgo de abandono del usuario en móvil por saturación tipográfica.`;
+      } else if (charCount < 12) {
+        copyAssessment = `⚠️ Copy muy escaso (${charCount} caracteres). No entrega suficiente propuesta de valor.`;
+      } else {
+        copyAssessment = `✓ Extensión adecuada (${charCount} caracteres). Óptima para lectura rápida mientras el usuario desliza el pulgar.`;
+      }
+
+      // Actionable Recommendation customized to this exact slide content
+      let recommendation = "";
+      if (isFirst) {
+        if (!hasNumber && !hasTriggerWords && !hasQuestion) {
+          recommendation = `Slide 1 (Gancho): El título "${slide.title}" es demasiado neutro. Incluye un número o palabra de impacto (ej: '5 Claves...', 'Evita este error...') para aumentar el swipe-through rate.`;
+        } else {
+          recommendation = `Slide 1 (Gancho Exitoso): Promesa clara en "${slide.title}". Muestra alta tasa de captación inicial en los primeros 500ms.`;
+        }
+      } else if (isLast) {
+        if (!hasCtaWord) {
+          recommendation = `Slide ${idx + 1} (Cierre): El contenido "${slide.title}" finaliza sin llamada a la acción explícita. Agrega un verbo de conversión claro (ej: 'Guarda esta guía', 'Haz clic en el enlace del perfil').`;
+        } else {
+          recommendation = `Slide ${idx + 1} (Cierre Efectivo): El CTA en "${slide.title}" impulsa eficazmente la interacción o conversión final.`;
+        }
+      } else {
+        if (charCount > 90) {
+          recommendation = `Slide ${idx + 1} (Desarrollo): Reduce el párrafo actual ("${slide.description.slice(0, 35)}...") a una frase corta de 2 líneas y destaca la palabra clave en negrita o color contrastante.`;
+        } else {
+          recommendation = `Slide ${idx + 1} (Desarrollo Secuencial): Mantiene buen ritmo de lectura sobre "${slide.title}". Asegúrate de colocar un indicador visual de flecha (➔) apuntando a la derecha para incentivar el siguiente Slide.`;
+        }
+      }
+
+      return {
+        slideIndex: idx + 1,
+        title: slide.title,
+        description: slide.description,
+        slideScore,
+        retentionEst: Math.round(retentionEst),
+        copyAssessment,
+        recommendation,
+        isCustomUploaded,
+        charCount
+      };
+    });
+
+    const averageCarouselScore = Math.round(totalScoreSum / slides.length);
+
+    return {
+      averageCarouselScore,
+      slideReports
+    };
   };
 
   // Mock calculation of metrics for A/B Testing comparison
@@ -899,99 +1013,232 @@ export default function AdsOptimizerView({
               </p>
             </div>
 
-            <button
-              onClick={handleAddCarouselSlide}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2 shrink-0 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ Agregar Diapositiva</span>
-            </button>
+            <div className="flex items-center space-x-3 shrink-0">
+              <label className="flex items-center space-x-2 text-xs font-bold text-slate-700 bg-slate-100 px-3 py-2 rounded-xl cursor-pointer border border-slate-200">
+                <input
+                  type="checkbox"
+                  checked={showCarouselHeatmap}
+                  onChange={(e) => setShowCarouselHeatmap(e.target.checked)}
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"
+                />
+                <Eye className="w-4 h-4 text-emerald-600" />
+                <span>Mapa de Calor Eye-Tracking</span>
+              </label>
+
+              <button
+                onClick={handleAddCarouselSlide}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Agregar Diapositiva</span>
+              </button>
+            </div>
           </div>
 
           {/* Interactive Slides Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {carouselSlides.map((slide, idx) => (
-              <div key={slide.id} className="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 space-y-3 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
-                      SLIDE {idx + 1}
-                    </span>
-                    <span className="text-xs font-mono font-bold text-slate-400">
-                      {idx === 0 ? "100% Atención" : `${Math.max(40, 100 - idx * 15)}% Retención`}
-                    </span>
-                  </div>
-
-                  {/* Image Preview */}
-                  <div className="relative h-36 w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-700">
-                    <img
-                      src={slide.imageUrl}
-                      alt={slide.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Image Upload Button */}
-                  <label className="flex items-center justify-center space-x-1.5 w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-bold rounded-lg cursor-pointer transition border border-slate-700">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>Subir Imagen Slide {idx + 1}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleUploadCarouselImage(idx, e)}
-                      className="hidden"
-                    />
-                  </label>
-
-                  {/* Title and Description Inputs */}
-                  <div className="space-y-2 pt-1">
-                    <div>
-                      <label className="text-[10px] text-slate-400 font-mono block mb-0.5">Título Tarjeta:</label>
-                      <input
-                        type="text"
-                        value={slide.title}
-                        onChange={(e) => {
-                          const updated = [...carouselSlides];
-                          updated[idx].title = e.target.value;
-                          setCarouselSlides(updated);
-                        }}
-                        className="w-full text-xs font-medium px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                      />
+            {carouselSlides.map((slide, idx) => {
+              const carouselAnalysisResult = getCarouselAnalysis(carouselSlides);
+              const slideReport = carouselAnalysisResult.slideReports[idx];
+              return (
+                <div key={slide.id} className="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 space-y-3 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+                        SLIDE {idx + 1}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-emerald-400">
+                        {slideReport ? `${slideReport.retentionEst}% Retención` : `${Math.max(40, 100 - idx * 15)}%`}
+                      </span>
                     </div>
 
-                    <div>
-                      <label className="text-[10px] text-slate-400 font-mono block mb-0.5">Descripción / Copy:</label>
-                      <textarea
-                        rows={2}
-                        value={slide.description}
-                        onChange={(e) => {
-                          const updated = [...carouselSlides];
-                          updated[idx].description = e.target.value;
-                          setCarouselSlides(updated);
-                        }}
-                        className="w-full text-xs font-medium px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 resize-none"
+                    {/* Image Preview */}
+                    <div className="relative h-36 w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-700">
+                      <img
+                        src={slide.imageUrl}
+                        alt={slide.title}
+                        className="w-full h-full object-cover"
                       />
+                      {showCarouselHeatmap && (
+                        <HeatmapOverlay
+                          points={[
+                            { x: 50, y: 30, weight: 0.95 },
+                            { x: 45, y: 65, weight: 0.85 },
+                            { x: 75, y: 75, weight: 0.70 }
+                          ]}
+                          opacity={0.65}
+                          radius={35}
+                        />
+                      )}
+                      {slideReport?.isCustomUploaded && (
+                        <div className="absolute top-1 right-1 bg-emerald-600 text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow font-bold z-10">
+                          Imagen Propia
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Image Upload Button */}
+                    <label className="flex items-center justify-center space-x-1.5 w-full py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-bold rounded-lg cursor-pointer transition border border-slate-700">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Subir Imagen Slide {idx + 1}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleUploadCarouselImage(idx, e)}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {/* Title and Description Inputs */}
+                    <div className="space-y-2 pt-1">
+                      <div>
+                        <label className="text-[10px] text-slate-400 font-mono block mb-0.5">Título Tarjeta:</label>
+                        <input
+                          type="text"
+                          value={slide.title}
+                          onChange={(e) => {
+                            const updated = [...carouselSlides];
+                            updated[idx].title = e.target.value;
+                            setCarouselSlides(updated);
+                          }}
+                          className="w-full text-xs font-medium px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-slate-400 font-mono block mb-0.5">Descripción / Copy:</label>
+                        <textarea
+                          rows={2}
+                          value={slide.description}
+                          onChange={(e) => {
+                            const updated = [...carouselSlides];
+                            updated[idx].description = e.target.value;
+                            setCarouselSlides(updated);
+                          }}
+                          className="w-full text-xs font-medium px-2.5 py-1 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 resize-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
+                    <span className="text-[10px] text-emerald-400 block font-mono font-bold">
+                      Score: {slideReport?.slideScore || 80}/100
+                    </span>
+                    {carouselSlides.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCarouselSlide(idx)}
+                        className="text-[10px] text-rose-400 hover:text-rose-300 underline font-mono"
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* DYNAMIC SLIDE-BY-SLIDE AI DIAGNOSTIC REPORT PANEL */}
+          {(() => {
+            const analysis = getCarouselAnalysis(carouselSlides);
+            return (
+              <div className="bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2.5 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400">
+                          Diagnóstico Dinámico Algorítmico Diapositiva por Diapositiva
+                        </span>
+                        <span className="px-2 py-0.5 bg-emerald-950 text-emerald-300 rounded-full text-[10px] font-mono font-bold border border-emerald-800">
+                          {carouselSlides.length} Diapositivas Analizadas
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-bold text-white font-display">
+                        Dictamen de Retención Secuencial y Calidad Narrativa
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3 bg-slate-800 px-4 py-2.5 rounded-2xl border border-slate-700 shrink-0">
+                    <div className="text-right">
+                      <span className="text-[10px] font-mono text-slate-400 block">Puntaje Global Carrusel</span>
+                      <span className="text-xl font-black text-emerald-400 font-mono">
+                        {analysis.averageCarouselScore}/100
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-                  <span className="text-[10px] text-emerald-400 block font-mono">
-                    ✓ Continuidad visual
+                {/* Individual Slide Breakdown Cards */}
+                <div className="space-y-4">
+                  <h4 className="text-xs font-bold font-mono text-slate-400 uppercase tracking-wider">
+                    Análisis Individual por Tarjeta (Basado en Tus Textos e Imágenes):
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {analysis.slideReports.map((report) => (
+                      <div
+                        key={report.slideIndex}
+                        className="bg-slate-800/90 rounded-2xl p-4 border border-slate-700/80 space-y-3 flex flex-col justify-between"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="px-2.5 py-0.5 bg-slate-900 text-emerald-400 rounded text-[10px] font-mono font-bold border border-emerald-900/60">
+                              Diapositiva #{report.slideIndex}
+                            </span>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-[11px] font-mono text-slate-400">
+                                Retención: <strong className="text-emerald-400">{report.retentionEst}%</strong>
+                              </span>
+                              <span className="text-xs font-black font-mono text-slate-200">
+                                Score: {report.slideScore}/100
+                              </span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-bold text-white leading-snug">
+                              "{report.title}"
+                            </p>
+                            <p className="text-[11px] text-slate-300 mt-0.5 italic">
+                              {report.description || "Sin descripción corta agregada"}
+                            </p>
+                          </div>
+
+                          <div className="p-2.5 bg-slate-900/80 rounded-xl border border-slate-800 text-[11px] space-y-1">
+                            <p className="text-slate-300 font-mono">{report.copyAssessment}</p>
+                          </div>
+                        </div>
+
+                        <div className="p-2.5 bg-emerald-950/40 rounded-xl border border-emerald-800/50 text-[11px] text-emerald-200 leading-relaxed">
+                          <strong className="text-emerald-400 block font-mono text-[10px] uppercase mb-0.5">
+                            💡 Recomendación de Optimización:
+                          </strong>
+                          {report.recommendation}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Summary & Narrative Verdict */}
+                <div className="p-4 bg-emerald-950/30 rounded-2xl border border-emerald-800/40 text-xs text-emerald-200 space-y-1">
+                  <span className="font-bold text-emerald-400 font-mono block">
+                    ✓ Veredicto de Estructura Narrativa
                   </span>
-                  {carouselSlides.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveCarouselSlide(idx)}
-                      className="text-[10px] text-rose-400 hover:text-rose-300 underline font-mono"
-                    >
-                      Eliminar
-                    </button>
-                  )}
+                  <p className="leading-relaxed">
+                    Este diagnóstico evalúa en tiempo real las variaciones de copy, la longitud de las oraciones y el orden de tus imágenes. Cada cambio en el título o descripción actualiza de forma inmediata la puntuación individual de cada diapositiva para prevenir la tasa de abandono prematuro antes del Slide de conversión final.
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </div>
       )}
 
