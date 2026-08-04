@@ -1,0 +1,1464 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useRef } from "react";
+import { Campaign } from "../types";
+import { campaignPresets } from "../campaignPresets";
+import { Plus, Image as ImageIcon, Trash2, Calendar, FileText, ChevronRight, UploadCloud, Cpu, AlertCircle, Frame, Megaphone, ShoppingCart, Package, Globe, Smartphone, Video, Sparkles, Car, Store, Eye, Scale, ArrowRightLeft, CheckCircle2 } from "lucide-react";
+import OOHShowcase from "./OOHShowcase";
+
+interface CampaignsListProps {
+  campaigns: Campaign[];
+  activeCampaignId: string | null;
+  onSelectCampaign: (id: string) => void;
+  onAddCampaign: (campaign: Campaign) => void;
+  onDeleteCampaign: (id: string) => void;
+  onAnalyzeCampaign: (id: string, campaignData?: Campaign) => Promise<void>;
+  isAnalyzing: boolean;
+  onNavigateTab?: (tab: "list" | "predictive" | "webcam" | "emotions" | "dashboard360" | "logoReview" | "adsOptimizer") => void;
+}
+
+export default function CampaignsList({
+  campaigns,
+  activeCampaignId,
+  onSelectCampaign,
+  onAddCampaign,
+  onDeleteCampaign,
+  onAnalyzeCampaign,
+  isAnalyzing,
+  onNavigateTab
+}: CampaignsListProps) {
+  const [showAddForm, setShowAddForm] = useState<boolean>(false);
+
+  const handleSelectToolCategory = (category: string) => {
+    if (category === "logoReview" || category === "adsOptimizer") {
+      if (onNavigateTab) {
+        onNavigateTab(category);
+      }
+      return;
+    }
+
+    setNewCampaign(prev => ({ ...prev, category }));
+    setShowAddForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleFilterCategory = (category: string) => {
+    setSelectedCategory(category);
+    const element = document.getElementById("studies-grid");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+  const [newCampaign, setNewCampaign] = useState({ name: "", description: "", category: "keyvisual" });
+  const [comparisonMode, setComparisonMode] = useState<'single' | 'original_vs_correction' | 'two_different_designs'>('single');
+  const [videoUrl, setVideoUrl] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imageName, setImageName] = useState<string>("");
+  const [selectedImageB, setSelectedImageB] = useState<string | null>(null);
+  const [imageNameB, setImageNameB] = useState<string>("");
+  const [variantBName, setVariantBName] = useState<string>("");
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isFileLoading, setIsFileLoading] = useState<boolean>(false);
+  const [fileLoadProgress, setFileLoadProgress] = useState<number>(0);
+  const [presentationSlides, setPresentationSlides] = useState<{ id: string; slideNumber: number; name: string; imageUrl: string }[]>([]);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRefB = useRef<HTMLInputElement | null>(null);
+
+  const handleUploadFileB = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setError("Por favor, selecciona un archivo de imagen válido para la opción B.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setSelectedImageB(e.target.result as string);
+        setImageNameB(file.name);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const getUploadInstructions = () => {
+    const category = newCampaign.category;
+    if (category === "video" || category === "tiktok") {
+      return {
+        title: "Arrastra un video de Reels/TikTok o miniatura de portada",
+        subtitle: "Soporta videos o imágenes de hasta 30MB",
+        accept: "video/*,image/*"
+      };
+    } else if (category === "presentation") {
+      return {
+        title: "Arrastra un archivo PDF o imagen de portada de la presentación",
+        subtitle: "Soporta documentos PDF o imágenes de hasta 30MB",
+        accept: ".pdf,image/*"
+      };
+    } else {
+      return {
+        title: "Arrastra una imagen de diseño o haz clic para buscar",
+        subtitle: "Soporta PNG, JPG, WEBP de hasta 30MB",
+        accept: "image/*"
+      };
+    }
+  };
+
+  // Handle multiple file upload for presentation slide decks
+  const handleUploadMultipleFiles = async (files: File[]) => {
+    const category = newCampaign.category;
+    if (category !== "presentation") return;
+
+    // If they uploaded a PDF, we fallback to standard single-file upload for PDF (with simulated slides)
+    const pdfFile = files.find(f => f.type === "application/pdf" || f.name.endsWith(".pdf"));
+    if (pdfFile) {
+      handleUploadFile(pdfFile);
+      return;
+    }
+
+    const imageFiles = files.filter(f => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) {
+      setError("Por favor, selecciona archivos de imagen válidos (PNG, JPG, WEBP) para tus diapositivas.");
+      return;
+    }
+
+    setError(null);
+    setIsFileLoading(true);
+    setFileLoadProgress(0);
+
+    const loadedSlidesList: { id: string; slideNumber: number; name: string; imageUrl: string }[] = [];
+    
+    try {
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        setFileLoadProgress(Math.round((i / imageFiles.length) * 100));
+        
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = (err) => reject(err);
+          reader.readAsDataURL(file);
+        });
+
+        loadedSlidesList.push({
+          id: `slide-${i + 1}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          slideNumber: i + 1,
+          name: `Diapositiva ${i + 1}: ${file.name.replace(/\.[^/.]+$/, "")}`,
+          imageUrl: base64
+        });
+      }
+
+      setFileLoadProgress(100);
+      setIsFileLoading(false);
+      setPresentationSlides(loadedSlidesList);
+      if (loadedSlidesList.length > 0) {
+        setSelectedImage(loadedSlidesList[0].imageUrl);
+        setImageName(`${imageFiles.length} diapositivas cargadas`);
+      }
+    } catch (err) {
+      console.error("Error loading multiple files:", err);
+      setError("Hubo un error al procesar las imágenes de la presentación.");
+      setIsFileLoading(false);
+    }
+  };
+
+  // Handle adaptive file upload based on selected category (Images: 30MB, Video/PDF: 30MB)
+  const handleUploadFile = (file: File) => {
+    const category = newCampaign.category;
+
+    if (category === "video" || category === "tiktok") {
+      const isVideo = file.type.startsWith("video/") || file.name.endsWith(".mp4") || file.name.endsWith(".webm") || file.name.endsWith(".mov") || file.name.endsWith(".mkv");
+      const isImage = file.type.startsWith("image/");
+
+      if (!isVideo && !isImage) {
+        setError("Por favor, selecciona un archivo de video válido (MP4, WebM, MOV) o una imagen de portada.");
+        return;
+      }
+
+      const maxVideoSize = 30 * 1024 * 1024; // 30MB
+      if (file.size > maxVideoSize) {
+        setError("El archivo es demasiado grande. El límite para videos es de 30MB.");
+        return;
+      }
+
+      setError(null);
+      setIsFileLoading(true);
+      setFileLoadProgress(0);
+
+      // Simulate a premium progress bar loading based on file size
+      let progress = 0;
+      const duration = Math.min(2000, Math.max(800, (file.size / (1024 * 1024)) * 250)); // 0.8s to 2s depending on size
+      const intervalTime = 40;
+      const step = (100 / (duration / intervalTime));
+
+      const interval = setInterval(() => {
+        progress += step;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          setIsFileLoading(false);
+          setImageName(file.name);
+          
+          if (isVideo) {
+            // Create an object URL for local video playback
+            const localVideoUrl = URL.createObjectURL(file);
+            setVideoUrl(localVideoUrl);
+            
+            // Extract actual frame as image for thermal / predictive tracking analysis
+            const video = document.createElement("video");
+            video.src = localVideoUrl;
+            video.muted = true;
+            video.playsInline = true;
+            
+            video.onloadedmetadata = () => {
+              video.currentTime = 0.5; // Seek to 0.5s to get a good frame
+            };
+
+            video.onseeked = () => {
+              try {
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 360;
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                  const frameBase64 = canvas.toDataURL("image/jpeg", 0.85);
+                  setSelectedImage(frameBase64);
+                }
+              } catch (err) {
+                console.error("Error capturing video frame:", err);
+                setSelectedImage(category === "tiktok"
+                  ? "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80"
+                  : "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80");
+              }
+            };
+
+            video.onerror = () => {
+              setSelectedImage(category === "tiktok"
+                ? "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80"
+                : "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80");
+            };
+
+            video.load();
+          } else {
+            // Image thumbnail
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              if (e.target?.result) {
+                setSelectedImage(e.target.result as string);
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        } else {
+          setFileLoadProgress(Math.min(99, Math.round(progress)));
+        }
+      }, intervalTime);
+
+    } else if (category === "presentation") {
+      const isPdf = file.type === "application/pdf" || file.name.endsWith(".pdf");
+      const isImage = file.type.startsWith("image/");
+
+      if (!isPdf && !isImage) {
+        setError("Por favor, selecciona un documento PDF o una imagen de portada.");
+        return;
+      }
+
+      const maxPdfSize = 30 * 1024 * 1024; // 30MB
+      if (file.size > maxPdfSize) {
+        setError("El archivo es demasiado grande. El límite para documentos PDF es de 30MB.");
+        return;
+      }
+
+      setError(null);
+      setIsFileLoading(true);
+      setFileLoadProgress(0);
+
+      let progress = 0;
+      const duration = Math.min(2200, Math.max(900, (file.size / (1024 * 1024)) * 280)); // 0.9s to 2.2s depending on size
+      const intervalTime = 40;
+      const step = (100 / (duration / intervalTime));
+
+      const interval = setInterval(() => {
+        progress += step;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          setIsFileLoading(false);
+          setImageName(file.name);
+          setPresentationSlides([]); // Reset multi-slide array since it's a single file upload
+
+          if (isPdf) {
+            // PDF uploaded. Use a premium high-quality PDF slides document template thumbnail
+            setSelectedImage("https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=800&q=80");
+          } else {
+            // Cover image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              if (e.target?.result) {
+                const base64 = e.target.result as string;
+                setSelectedImage(base64);
+                // Also initialize presentationSlides with this single image so they have their exact slide analyzed
+                setPresentationSlides([{
+                  id: `slide-1-${Date.now()}`,
+                  slideNumber: 1,
+                  name: `Diapositiva 1: ${file.name.replace(/\.[^/.]+$/, "")}`,
+                  imageUrl: base64
+                }]);
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+        } else {
+          setFileLoadProgress(Math.min(99, Math.round(progress)));
+        }
+      }, intervalTime);
+
+    } else {
+      // Standard image mockup types
+      if (!file.type.startsWith("image/")) {
+        setError("Por favor, selecciona un archivo de imagen válido (PNG, JPG, WEBP).");
+        return;
+      }
+
+      const maxImageSize = 30 * 1024 * 1024; // Increased from 8MB to 30MB
+      if (file.size > maxImageSize) {
+        setError("La imagen es demasiado grande. Sube una imagen menor de 30MB.");
+        return;
+      }
+
+      setError(null);
+      setIsFileLoading(true);
+      setFileLoadProgress(0);
+
+      let progress = 0;
+      const duration = Math.min(1800, Math.max(700, (file.size / (1024 * 1024)) * 220)); // 0.7s to 1.8s depending on size
+      const intervalTime = 40;
+      const step = (100 / (duration / intervalTime));
+
+      const interval = setInterval(() => {
+        progress += step;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          setIsFileLoading(false);
+          setImageName(file.name);
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              setSelectedImage(e.target.result as string);
+            }
+          };
+          reader.readAsDataURL(file);
+        } else {
+          setFileLoadProgress(Math.min(99, Math.round(progress)));
+        }
+      }, intervalTime);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      if (newCampaign.category === "presentation") {
+        handleUploadMultipleFiles(Array.from(e.dataTransfer.files));
+      } else {
+        handleUploadFile(e.dataTransfer.files[0]);
+      }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      if (newCampaign.category === "presentation") {
+        handleUploadMultipleFiles(Array.from(e.target.files));
+      } else {
+        handleUploadFile(e.target.files[0]);
+      }
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    let finalImageUrl = selectedImage;
+    if ((newCampaign.category === "video" || newCampaign.category === "tiktok") && !finalImageUrl) {
+      finalImageUrl = newCampaign.category === "tiktok"
+        ? "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80"
+        : "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80";
+    }
+
+    if (!newCampaign.name.trim() || !finalImageUrl) {
+      setError("Por favor, introduce un nombre y selecciona un diseño para continuar.");
+      return;
+    }
+
+    const createdCampaign: Campaign = {
+      id: `camp-${Date.now()}`,
+      name: newCampaign.name,
+      description: newCampaign.description || "Sin descripción proporcionada.",
+      createdAt: new Date().toISOString(),
+      imageName: imageName || ((newCampaign.category === "video" || newCampaign.category === "tiktok") ? "video_thumbnail.jpg" : "custom_upload.jpg"),
+      imageUrl: finalImageUrl,
+      isPreset: false,
+      status: "pending",
+      category: newCampaign.category as any,
+      comparisonMode: comparisonMode,
+      variantBImageUrl: comparisonMode !== 'single' ? (selectedImageB || undefined) : undefined,
+      variantBName: comparisonMode !== 'single' 
+        ? (variantBName.trim() || (comparisonMode === 'original_vs_correction' ? "Diseño B (Versión Corregida)" : "Diseño B (Opción Alternative)")) 
+        : undefined,
+      videoUrl: (newCampaign.category === "video" || newCampaign.category === "tiktok") ? (videoUrl.trim() || "https://assets.mixkit.co/videos/preview/mixkit-cold-drink-with-lemon-and-mint-leaves-42358-large.mp4") : undefined,
+      areasOfInterest: [
+        { id: "aoi-h1", name: "Zona Titular Superior", x: 50, y: 25, width: 60, height: 15 },
+        { id: "aoi-cta", name: "Botón CTA Principal", x: 50, y: 70, width: 25, height: 8 },
+        { id: "aoi-brand", name: "Área de Logotipo", x: 15, y: 10, width: 18, height: 6 }
+      ]
+    };
+
+    if (newCampaign.category === "presentation") {
+      const docLabel = imageName ? ` - ${imageName.replace(/\.pdf$/i, "")}` : "";
+      
+      if (presentationSlides.length > 0) {
+        // If the user uploaded custom slides as images, use their actual slides!
+        createdCampaign.slides = presentationSlides.map((slide, i) => ({
+          id: slide.id,
+          slideNumber: i + 1,
+          name: slide.name,
+          imageUrl: slide.imageUrl,
+          areasOfInterest: [
+            { id: `aoi-s${i+1}-1`, name: "Área de Interés de Diapositiva", x: 50, y: 40, width: 50, height: 15 }
+          ]
+        }));
+      } else {
+        // If they uploaded a PDF template
+        createdCampaign.slides = [
+          {
+            id: `slide-1-${Date.now()}`,
+            slideNumber: 1,
+            name: `Diapositiva 1: Portada${docLabel}`,
+            imageUrl: finalImageUrl,
+            areasOfInterest: [
+              { id: "aoi-s1-1", name: "Título de la Portada", x: 50, y: 35, width: 60, height: 15 },
+              { id: "aoi-s1-2", name: "Subtítulo / Bajada de Texto", x: 50, y: 55, width: 50, height: 10 }
+            ]
+          },
+          {
+            id: `slide-2-${Date.now()}`,
+            slideNumber: 2,
+            name: `Diapositiva 2: Datos y Métricas (Ejemplo Demo)`,
+            imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
+            areasOfInterest: [
+              { id: "aoi-s2-1", name: "Gráfico de Crecimiento", x: 50, y: 50, width: 45, height: 35 }
+            ]
+          }
+        ];
+      }
+    }
+
+    onAddCampaign(createdCampaign);
+    
+    // Reset form
+    setNewCampaign({ name: "", description: "", category: "keyvisual" });
+    setComparisonMode("single");
+    setVideoUrl("");
+    setSelectedImage(null);
+    setImageName("");
+    setSelectedImageB(null);
+    setImageNameB("");
+    setVariantBName("");
+    setPresentationSlides([]);
+    setShowAddForm(false);
+
+    // Auto-trigger Gemini analysis
+    await onAnalyzeCampaign(createdCampaign.id, createdCampaign);
+  };
+
+  // Helper to load presets as campaign copies
+  const handleLoadPreset = (preset: Campaign) => {
+    const clone: Campaign = {
+      ...preset,
+      id: `camp-${preset.id}-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      isPreset: false // Make it a customizable user copy
+    };
+    onAddCampaign(clone);
+  };
+
+  const filteredCampaigns = campaigns.filter(camp => {
+    if (selectedCategory === "all") return true;
+    if (selectedCategory === "video") {
+      return camp.category === "video" || camp.category === "tiktok";
+    }
+    return camp.category === selectedCategory;
+  });
+
+  return (
+    <div className="space-y-6">
+      
+      {/* Header and Add Campaign button */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 leading-tight">Campañas de Estudio de Atención</h2>
+          <p className="text-slate-500 text-xs mt-0.5">Sube tus diseños o mockups y analiza la jerarquía cognitiva de tu contenido publicitario o interfaces.</p>
+        </div>
+
+        {!showAddForm && (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-indigo-600/15 flex items-center self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            Nueva Campaña
+          </button>
+        )}
+      </div>
+
+      {/* Upload/Add Form */}
+      {showAddForm && (
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="font-bold text-slate-800 text-sm flex items-center">
+              <Plus className="w-4 h-4 text-indigo-500 mr-2" />
+              Crear Nueva Campaña de Test
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowAddForm(false)}
+              className="text-slate-400 hover:text-slate-600 text-xs font-medium"
+            >
+              Cancelar
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            
+            {/* Input fields (5 columns) */}
+            <div className="md:col-span-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Nombre del Diseño / Campaña *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Landing de Smartwatch, Banner de Facebook"
+                  value={newCampaign.name}
+                  onChange={(e) => setNewCampaign(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Descripción u Objetivo del Test
+                </label>
+                <textarea
+                  placeholder="Ej: Evaluar si el botón de registro tiene visibilidad suficiente o si el producto de la góndola destaca..."
+                  rows={3}
+                  value={newCampaign.description}
+                  onChange={(e) => setNewCampaign(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Tipo de Estudio / Formato de Imagen
+                </label>
+                <select
+                  value={newCampaign.category}
+                  onChange={(e) => setNewCampaign(prev => ({ ...prev, category: e.target.value }))}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition cursor-pointer font-medium"
+                >
+                  <option value="keyvisual">Cartel / Póster / Keyvisual 🖼️</option>
+                  <option value="banner">Banner Publicitario / Anuncio Display 📢</option>
+                  <option value="supermarket">Estante de Supermercado / Góndola (Planograma) 🛒</option>
+                  <option value="packaging">Diseño de Etiquetas & Empaques (Forma, Colores) 📦</option>
+                  <option value="landing">Página Web / Landing Page 🌐</option>
+                  <option value="fintech">Interfaz de Aplicación (App UX) 📱</option>
+                  <option value="video">Anuncio en Video / Comercial de TV 📹</option>
+                  <option value="tiktok">Reels / TikTok / Shorts (Video Vertical 9:16) 📱</option>
+                  <option value="presentation">Presentación Comercial / Reporte PDF 📄</option>
+                </select>
+              </div>
+
+              {/* Mode Selector for Dual Design Comparison */}
+              <div className="space-y-1.5 pt-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Modo de Evaluación de Diseños
+                </label>
+                <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setComparisonMode("single")}
+                    className={`px-2 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex flex-col items-center text-center cursor-pointer ${
+                      comparisonMode === "single"
+                        ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Eye className="w-3.5 h-3.5 mb-1" />
+                    <span>1 Diseño</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setComparisonMode("original_vs_correction")}
+                    className={`px-2 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex flex-col items-center text-center cursor-pointer ${
+                      comparisonMode === "original_vs_correction"
+                        ? "bg-white text-emerald-600 shadow-xs border border-slate-200"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <Scale className="w-3.5 h-3.5 mb-1 text-emerald-500" />
+                    <span>Original vs Corrección</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setComparisonMode("two_different_designs")}
+                    className={`px-2 py-2 rounded-xl text-[10px] sm:text-[11px] font-bold transition flex flex-col items-center text-center cursor-pointer ${
+                      comparisonMode === "two_different_designs"
+                        ? "bg-white text-indigo-600 shadow-xs border border-slate-200"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <ArrowRightLeft className="w-3.5 h-3.5 mb-1 text-indigo-500" />
+                    <span>2 Diferentes</span>
+                  </button>
+                </div>
+              </div>
+
+              {comparisonMode !== "single" && (
+                <div className="p-3 bg-indigo-50/60 rounded-2xl border border-indigo-100 space-y-2">
+                  <label className="block text-xs font-bold text-indigo-900 uppercase tracking-wider">
+                    {comparisonMode === "original_vs_correction"
+                      ? "Etiqueta de la Versión Corregida (Diseño B)"
+                      : "Nombre de la Propuesta / Opción B"}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={
+                      comparisonMode === "original_vs_correction"
+                        ? "Ej: Propuesta B - Botón rojo y texto con más contraste"
+                        : "Ej: Opción 2 - Estilo Fotográfico / Competidor"
+                    }
+                    value={variantBName}
+                    onChange={(e) => setVariantBName(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-indigo-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                  <p className="text-[10px] text-indigo-700">
+                    * El sistema analizará ambos archivos simultáneamente con IA y mostrará mapas de calor y puntuaciones comparativas lado a lado.
+                  </p>
+                </div>
+              )}
+
+              {(newCampaign.category === "video" || newCampaign.category === "tiktok") && (
+                <div className="mt-4">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    URL del Video MP4 (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={newCampaign.category === "tiktok" ? "Dejar vacío para usar video demo vertical de Café Frapé..." : "Dejar vacío para usar video demo de refresco cítrico..."}
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                  />
+                  <p className="text-[10px] text-indigo-600 font-medium mt-1">
+                    * Usaremos un video publicitario premium por defecto si no ingresas uno para simular los sensores.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Drag & Drop Upload Frame (7 columns) */}
+            <div className="md:col-span-7 flex flex-col justify-between">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  {(newCampaign.category === "video" || newCampaign.category === "tiktok")
+                    ? "Archivo de Video o Miniatura *" 
+                    : newCampaign.category === "presentation" 
+                    ? "Documento PDF o Imagen de Portada *" 
+                    : "Mockup de Diseño o Imagen de Campaña *"}
+                </label>
+
+                {isFileLoading ? (
+                  <div className="aspect-video w-full rounded-2xl border-2 border-indigo-200 bg-indigo-50/20 flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+                    <div className="relative w-16 h-16 mb-3">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          className="stroke-indigo-100"
+                          strokeWidth="8"
+                          fill="none"
+                        />
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          className="stroke-indigo-600 transition-all duration-100 ease-out"
+                          strokeWidth="8"
+                          fill="none"
+                          strokeDasharray={251.2}
+                          strokeDashoffset={251.2 - (251.2 * fileLoadProgress) / 100}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold text-indigo-700">
+                        {fileLoadProgress}%
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-slate-800">Cargando y decodificando archivo...</span>
+                    <span className="text-[10px] text-indigo-600 mt-1 font-mono font-medium animate-pulse">
+                      {(newCampaign.category === "video" || newCampaign.category === "tiktok") 
+                        ? "Procesando fragmentos de video..." 
+                        : newCampaign.category === "presentation" 
+                        ? "Analizando páginas PDF..." 
+                        : "Preparando resolución de imagen..."}
+                    </span>
+                  </div>
+                ) : selectedImage ? (
+                  <div className="flex flex-col space-y-3 w-full">
+                    <div className="relative aspect-video w-full rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center p-2">
+                      <img
+                        src={selectedImage}
+                        alt="Selected mockup preview"
+                        className="max-h-[180px] w-auto object-contain rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedImage(null);
+                          setImageName("");
+                          setPresentationSlides([]);
+                          if (newCampaign.category === "video" || newCampaign.category === "tiktok") {
+                            setVideoUrl("");
+                          }
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-slate-900/80 hover:bg-slate-900 text-white rounded-full transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-slate-900/80 text-white px-2.5 py-1 rounded text-[10px] font-mono max-w-[80%] truncate">
+                        {imageName}
+                      </div>
+                    </div>
+                    
+                    {presentationSlides.length > 1 && (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono block">Diapositivas de la Presentación ({presentationSlides.length})</span>
+                        <div className="flex gap-2 overflow-x-auto py-1 scrollbar-thin">
+                          {presentationSlides.map((slide, idx) => (
+                            <div 
+                              key={slide.id} 
+                              onClick={() => setSelectedImage(slide.imageUrl)}
+                              className={`relative aspect-video rounded-lg border-2 overflow-hidden cursor-pointer transition w-24 shrink-0 ${
+                                selectedImage === slide.imageUrl ? "border-indigo-600 scale-95 shadow-sm" : "border-slate-100 hover:border-slate-200"
+                              }`}
+                            >
+                              <img src={slide.imageUrl} className="w-full h-full object-cover" />
+                              <div className="absolute bottom-0 inset-x-0 bg-slate-900/60 text-[8px] text-white py-0.5 px-1 truncate text-center font-medium">
+                                Pág. {idx + 1}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`aspect-video w-full border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-6 text-center cursor-pointer transition ${
+                      isDragging 
+                        ? "border-indigo-500 bg-indigo-50/50" 
+                        : "border-slate-200 hover:border-slate-300 bg-slate-50/50"
+                    }`}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept={getUploadInstructions().accept}
+                      onChange={handleFileChange}
+                      className="hidden"
+                      multiple={newCampaign.category === "presentation"}
+                    />
+                    <UploadCloud className="w-10 h-10 text-slate-400 mb-2" />
+                    <span className="text-xs font-bold text-slate-700">{getUploadInstructions().title}</span>
+                    <span className="text-[10px] text-slate-400 mt-1">{getUploadInstructions().subtitle}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Zone for Design B when comparisonMode is enabled */}
+              {comparisonMode !== "single" && (
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span>
+                      {comparisonMode === "original_vs_correction"
+                        ? "2. Cargar Diseño B (Versión Corregida) *"
+                        : "2. Cargar Diseño B (Propuesta 2 / Competidor) *"}
+                    </span>
+                    {selectedImageB && (
+                      <span className="text-[10px] font-mono text-emerald-600 flex items-center font-bold">
+                        <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" />
+                        Imagen B Lista
+                      </span>
+                    )}
+                  </label>
+
+                  {selectedImageB ? (
+                    <div className="relative aspect-video w-full rounded-2xl border border-indigo-200 bg-indigo-50/20 overflow-hidden flex items-center justify-center p-2">
+                      <img
+                        src={selectedImageB}
+                        alt="Selected mockup B preview"
+                        className="max-h-[160px] w-auto object-contain rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedImageB(null);
+                          setImageNameB("");
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-slate-900/80 hover:bg-slate-900 text-white rounded-full transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <div className="absolute bottom-2 left-2 bg-indigo-900/90 text-white px-2.5 py-1 rounded text-[10px] font-mono max-w-[80%] truncate">
+                        Diseño B: {imageNameB || "Archivo cargado"}
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRefB.current?.click()}
+                      className="aspect-video w-full border-2 border-dashed border-indigo-200 hover:border-indigo-400 bg-indigo-50/30 rounded-2xl flex flex-col items-center justify-center p-4 text-center cursor-pointer transition"
+                    >
+                      <input
+                        ref={fileInputRefB}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleUploadFileB(e.target.files[0]);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <UploadCloud className="w-8 h-8 text-indigo-400 mb-1.5" />
+                      <span className="text-xs font-bold text-indigo-900">
+                        {comparisonMode === "original_vs_correction"
+                          ? "Haz clic para subir la versión corregida u optimizada"
+                          : "Haz clic para subir la segunda opción o diseño de la competencia"}
+                      </span>
+                      <span className="text-[10px] text-slate-500 mt-0.5">Soporta PNG, JPG, WEBP de hasta 30MB</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {error && (
+                <div className="flex items-center space-x-1.5 text-xs text-rose-600 bg-rose-50 p-2.5 rounded-xl border border-rose-100 mt-3">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-indigo-600/15"
+              >
+                Crear Campaña e Iniciar Análisis Predictivo de IA
+              </button>
+            </div>
+
+          </div>
+
+          {/* Quick preset loading bar inside create form */}
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">O usa una plantilla de estudio preestablecida:</span>
+            <div className="flex flex-wrap gap-2">
+              {campaignPresets.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handleLoadPreset(preset)}
+                  className="px-3 py-1.5 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-indigo-600 text-xs font-medium rounded-lg transition shadow-xs flex items-center"
+                >
+                  <Cpu className="w-3.5 h-3.5 mr-1 text-indigo-500" />
+                  {preset.name.split(":")[1] || preset.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* Featured Tools Showcase Banner & Grid on Landing */}
+      {!showAddForm && (
+        <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-800/80 pb-6">
+              <div>
+                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-[10px] font-mono font-bold tracking-wider uppercase mb-2">
+                  <Sparkles className="w-3 h-3 text-indigo-400" />
+                  <span>Especialidades de Neuromarketing Predictivo</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black font-display tracking-tight text-white leading-tight">
+                  Herramientas de Análisis de Atención Visual
+                </h3>
+                <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
+                  Selecciona la herramienta especializada según el tipo de formato publicitario o interfaz para evaluar la jerarquía cognitiva de tu diseño.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2 shrink-0">
+                <button
+                  onClick={() => handleSelectToolCategory("keyvisual")}
+                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition shadow-lg shadow-rose-600/25 flex items-center gap-2 group"
+                >
+                  <Frame className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
+                  <span>Crear Cartel / Póster</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Grid of Specialized Tool Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+              
+              {/* Card 1: CARTELES Y POSTERS (DESTACADA) */}
+              <div className="bg-slate-800/90 hover:bg-slate-800 border-2 border-rose-500/80 hover:border-rose-400 rounded-2xl p-5 transition flex flex-col justify-between shadow-xl relative group">
+                <div className="absolute -top-3 right-4 bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-md font-mono flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  HERRAMIENTA DESTACADA
+                </div>
+
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-rose-500/20 border border-rose-400/40 text-rose-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Frame className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm flex items-center gap-1.5">
+                    Carteles, Pósters & Keyvisuals
+                  </h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Optimiza el impacto en vía pública, impresos y vallas urbanas. Mide fijaciones foveales a 3s, legibilidad a distancia y reconocimiento de marca.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("keyvisual")}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Cartel / Póster
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("keyvisual")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de carteles"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 2: Banners & Ads Digitales */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Megaphone className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Banners & Ads Digitales</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Evalúa anuncios para Google Display, Meta Ads y e-Commerce para maximizar el CTR y mitigar la ceguera publicitaria.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleSelectToolCategory("banner")}
+                      className="px-3 py-1.5 bg-slate-700 hover:bg-indigo-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Analizar Banner
+                    </button>
+                    <button
+                      onClick={() => handleFilterCategory("banner")}
+                      className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                      title="Ver estudios de banners"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => handleSelectToolCategory("adsOptimizer")}
+                    className="w-full py-1.5 bg-cyan-600/90 hover:bg-cyan-500 text-white text-[11px] font-bold rounded-lg transition flex items-center justify-center space-x-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+                    <span>Hub A/B, DCO & Formatos Google</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 3: Estantes & Góndolas */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 mb-3 group-hover:scale-105 transition-transform">
+                    <ShoppingCart className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Góndolas & Planogramas</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Mide la atracción en la zona a la altura de ojos en supermercados y compara la prominencia contra competidores.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("supermarket")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Góndola
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("supermarket")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de góndola"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 4: Empaques & Packaging */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Package className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Empaques & Packaging</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Audita el contraste cromático de etiquetas, la visibilidad del logotipo de marca y la ergonomía visual de empaques.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("packaging")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Empaque
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("packaging")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de empaques"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 5: Páginas Web & Landings */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-blue-500/20 border border-blue-400/30 text-blue-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Globe className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Webs & Landing Pages</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Optimiza la conversión web midiendo la atención en el héroe principal, botones CTA, testimonios y precios.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("landing")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Web
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("landing")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios web"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 6: Mobile Apps UX */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-purple-500/20 border border-purple-400/30 text-purple-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Smartphone className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Interfaces App Móvil</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Analiza la carga cognitiva y claridad en apps móviles, verificando saldos, alertas y flujos de navegación.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("fintech")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-purple-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar App UX
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("fintech")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de apps"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 7: Video & Reels */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-violet-500/20 border border-violet-400/30 text-violet-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Video className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Videos, Reels & TikTok</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Analiza la retención segundo a segundo, el gancho visual (hook) de 3s y la lectura de subtítulos animados.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => handleSelectToolCategory("video")}
+                    className="px-3 py-1.5 bg-slate-700 hover:bg-violet-600 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Analizar Video
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("video")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0"
+                    title="Ver estudios de video"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card 8: Publicidad Exterior & OOH (Validación OOH) */}
+              <div className="bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-2xl p-5 transition flex flex-col justify-between group">
+                <div>
+                  <div className="p-2.5 w-fit rounded-xl bg-rose-500/20 border border-rose-400/30 text-rose-300 mb-3 group-hover:scale-105 transition-transform">
+                    <Car className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-bold text-white text-sm">Validación OOH & Exterior</h4>
+                  <p className="text-[11px] text-slate-300 mt-1.5 leading-relaxed">
+                    Evalúa legibilidad a distancia, jerarquía y atención a 2-3s en vehículos/flotas, vitrinas comerciales y columnas de retail.
+                  </p>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-slate-700/60 flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => {
+                      const element = document.getElementById("ooh-showcase");
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth" });
+                      } else {
+                        handleSelectToolCategory("keyvisual");
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 w-full justify-center shadow-sm cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    Probar Validación OOH
+                  </button>
+                  <button
+                    onClick={() => handleFilterCategory("keyvisual")}
+                    className="p-1.5 bg-slate-700/80 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg transition text-[11px] font-medium shrink-0 cursor-pointer"
+                    title="Ver estudios de publicidad exterior"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECCIÓN INDEPENDIENTE: AUDITORÍA TÉCNICA DE LOGOS & MARCA (FUERA DE HERRAMIENTAS DE EYE-TRACKING) */}
+      {!showAddForm && (
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 border border-slate-800 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 my-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex items-start space-x-4 relative z-10">
+            <div className="p-3 bg-indigo-600/20 rounded-2xl border border-indigo-500/40 text-indigo-400 shrink-0">
+              <Sparkles className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-[10px] font-mono font-bold uppercase">
+                <span>Módulo Independiente de Branding</span>
+              </div>
+              <h3 className="text-lg font-bold text-white font-display">
+                Auditoría Técnica de Logotipos & Identidad de Marca (Logo Reviewer AI)
+              </h3>
+              <p className="text-slate-300 text-xs max-w-2xl leading-relaxed">
+                Herramienta especializada de diseño vectorial independiente de las pruebas de eye-tracking. Analiza la escalabilidad a 16px, versatilidad en bordes, legibilidad en fondos complejos y contraste sin requerir simulaciones de mirada.
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 w-full md:w-auto relative z-10">
+            <button
+              onClick={() => handleSelectToolCategory("logoReview")}
+              className="w-full md:w-auto px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-lg shadow-indigo-600/25 flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4 text-indigo-200" />
+              <span>Abrir Auditoría de Logos</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Out-of-Home (OOH) Publicidad Exterior Use Cases Showcase */}
+      {!showAddForm && (
+        <OOHShowcase onTestDesign={(category) => handleSelectToolCategory(category)} />
+      )}
+
+      {/* Category Tabs */}
+      <div id="studies-grid" className="flex bg-slate-100 p-1 rounded-2xl w-fit overflow-x-auto max-w-full space-x-1 border border-slate-200/40">
+        <button
+          onClick={() => setSelectedCategory("all")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+            selectedCategory === "all" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-950"
+          }`}
+        >
+          Todos los Diseños
+        </button>
+        <button
+          onClick={() => setSelectedCategory("keyvisual")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            selectedCategory === "keyvisual" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-955"
+          }`}
+        >
+          🖼️ Carteles & Keyvisuals
+        </button>
+        <button
+          onClick={() => setSelectedCategory("banner")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            selectedCategory === "banner" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-955"
+          }`}
+        >
+          📢 Banners & Publicidad
+        </button>
+        <button
+          onClick={() => setSelectedCategory("supermarket")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            selectedCategory === "supermarket" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-955"
+          }`}
+        >
+          🛒 Estantes & Góndolas
+        </button>
+        <button
+          onClick={() => setSelectedCategory("packaging")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            selectedCategory === "packaging" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-955"
+          }`}
+        >
+          📦 Empaques & Etiquetas
+        </button>
+        <button
+          onClick={() => setSelectedCategory("landing")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+            selectedCategory === "landing" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-955"
+          }`}
+        >
+          Web / Landings
+        </button>
+        <button
+          onClick={() => setSelectedCategory("fintech")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+            selectedCategory === "fintech" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-955"
+          }`}
+        >
+          Interfaces de App
+        </button>
+        <button
+          onClick={() => setSelectedCategory("video")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            selectedCategory === "video" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-955"
+          }`}
+        >
+          📹 Videos & Comerciales
+        </button>
+        <button
+          onClick={() => setSelectedCategory("presentation")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+            selectedCategory === "presentation" ? "bg-white text-indigo-600 shadow-xs" : "text-slate-600 hover:text-slate-955"
+          }`}
+        >
+          📄 Presentaciones PDF
+        </button>
+      </div>
+
+      {/* Campaigns Grid */}
+      {filteredCampaigns.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-16 text-center bg-white rounded-3xl border border-slate-100 shadow-xs">
+          <ImageIcon className="w-12 h-12 text-slate-300 mb-3" />
+          <h4 className="text-sm font-bold text-slate-800">No hay estudios en esta categoría</h4>
+          <p className="text-slate-400 text-xs mt-1 max-w-sm">
+            Crea una nueva campaña o estudio de atención seleccionando esta categoría para ver los resultados predictivos o haz clic en "Todos los Diseños".
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCampaigns.map((camp) => {
+            const isActive = camp.id === activeCampaignId;
+            const pointsCount = camp.predictive?.focusAreas.length || 0;
+            
+            return (
+              <div
+                key={camp.id}
+                onClick={() => onSelectCampaign(camp.id)}
+                className={`bg-white rounded-3xl overflow-hidden border transition cursor-pointer flex flex-col justify-between ${
+                  isActive 
+                    ? "border-indigo-500 shadow-md ring-2 ring-indigo-500/5" 
+                    : "border-slate-100 hover:border-slate-200 shadow-xs"
+                }`}
+              >
+                <div>
+                  {/* Thumbnail header */}
+                  <div className="relative aspect-video w-full bg-slate-900 border-b border-slate-50 flex items-center justify-center overflow-hidden">
+                    <img
+                      src={camp.imageUrl}
+                      alt={camp.name}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover"
+                    />
+                    
+                    {/* Category Overlay Badge */}
+                    {camp.category && (
+                      <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider uppercase font-mono z-20 shadow-sm text-white ${
+                        camp.category === "supermarket" ? "bg-emerald-600" :
+                        camp.category === "keyvisual" ? "bg-rose-600" :
+                        camp.category === "landing" ? "bg-blue-600" :
+                        camp.category === "packaging" ? "bg-amber-600" :
+                        camp.category === "video" ? "bg-violet-600" :
+                        camp.category === "tiktok" ? "bg-gradient-to-r from-purple-600 to-pink-500" :
+                        camp.category === "presentation" ? "bg-indigo-600" :
+                        "bg-cyan-600"
+                      }`}>
+                        {camp.category === "supermarket" ? "🛒 Góndola" :
+                         camp.category === "keyvisual" ? "🖼️ Keyvisual" :
+                         camp.category === "landing" ? "🌐 Web" :
+                         camp.category === "packaging" ? "📦 Empaque" :
+                         camp.category === "video" ? "📹 Video" :
+                         camp.category === "tiktok" ? "📱 Reel / TikTok" :
+                         camp.category === "presentation" ? "📄 Presentación PDF" :
+                         "📱 App UX"}
+                      </div>
+                    )}
+
+                    {/* Overlay indicators */}
+                    <div className="absolute bottom-2 left-2 bg-slate-900/80 text-white px-2 py-0.5 rounded text-[9px] font-semibold tracking-wider uppercase font-mono z-20">
+                      {camp.status === "ready" ? "Estudio Activo" : "Pendiente de IA"}
+                    </div>
+
+                    {(camp.variantBImageUrl || (camp.comparisonMode && camp.comparisonMode !== "single")) && (
+                      <div className="absolute top-2 right-2 bg-gradient-to-r from-emerald-600 to-indigo-600 text-white px-2 py-0.5 rounded-md text-[9px] font-extrabold tracking-wider uppercase font-mono z-20 shadow-sm flex items-center gap-1">
+                        <Scale className="w-2.5 h-2.5" />
+                        <span>Comparativa A/B</span>
+                      </div>
+                    )}
+
+                    {camp.isPreset && !camp.variantBImageUrl && (
+                      <div className="absolute top-2 right-2 bg-indigo-500 text-white px-2 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase font-mono z-20">
+                        Preset Demo
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Body details */}
+                  <div className="p-5 space-y-2">
+                    <h3 className="font-bold text-slate-800 text-sm leading-snug line-clamp-1">{camp.name}</h3>
+                    <p className="text-slate-500 text-xs line-clamp-2 h-8 leading-relaxed">{camp.description}</p>
+                  </div>
+                </div>
+
+                {/* Bottom statistics and select action */}
+                <div className="p-5 pt-0 border-t border-slate-50/80 mt-auto">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 py-3 font-mono">
+                    <span className="flex items-center">
+                      <Calendar className="w-3.5 h-3.5 mr-1" />
+                      {new Date(camp.createdAt).toLocaleDateString("es-ES")}
+                    </span>
+                    <span className="flex items-center">
+                      <FileText className="w-3.5 h-3.5 mr-1" />
+                      {pointsCount > 0 ? `${pointsCount} Anclas` : "Sin Reporte"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    {/* Select button */}
+                    <span className={`text-xs font-bold flex items-center transition ${
+                      isActive ? "text-indigo-600" : "text-slate-700"
+                    }`}>
+                      Abrir Análisis
+                      <ChevronRight className={`w-4 h-4 ml-0.5 transition-transform ${isActive ? "translate-x-1" : ""}`} />
+                    </span>
+
+                    {/* Delete button (except presets to avoid locking) */}
+                    {!camp.isPreset && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteCampaign(camp.id);
+                        }}
+                        className="p-1.5 text-slate-300 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition"
+                        title="Eliminar campaña"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+    </div>
+  );
+}
