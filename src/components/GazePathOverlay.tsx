@@ -37,6 +37,15 @@ export default function GazePathOverlay({
     updateCoords();
 
     window.addEventListener("resize", updateCoords);
+
+    let ro: ResizeObserver | null = null;
+    if (svgEl.parentElement) {
+      ro = new ResizeObserver(() => {
+        updateCoords();
+      });
+      ro.observe(svgEl.parentElement);
+    }
+
     const media = svgEl.parentElement?.querySelector("img, video");
     if (media) {
       media.addEventListener("load", updateCoords);
@@ -45,6 +54,7 @@ export default function GazePathOverlay({
 
     return () => {
       window.removeEventListener("resize", updateCoords);
+      ro?.disconnect();
       if (media) {
         media.removeEventListener("load", updateCoords);
         media.removeEventListener("loadedmetadata", updateCoords);

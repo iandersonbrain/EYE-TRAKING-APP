@@ -286,7 +286,8 @@ export default function App() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               imageBase64: compressedImage,
-              imageName: targetCamp.imageName
+              imageName: targetCamp.imageName,
+              industryType: targetCamp.industryType
             })
           });
 
@@ -306,7 +307,7 @@ export default function App() {
           } else {
             predictiveData = (data && data.simulatedData) 
               ? data.simulatedData 
-              : generateClientSimulatedData(targetCamp.name, targetCamp.category);
+              : generateClientSimulatedData(targetCamp.name, targetCamp.category, targetCamp.imageUrl, targetCamp.industryType);
           }
 
           // If Campaign has a second design variant B (A/B comparison mode)
@@ -317,7 +318,11 @@ export default function App() {
               const respB = await fetch("/api/predictive-analysis", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ imageBase64: compB, imageName: targetCamp.variantBName || "variantB.jpg" })
+                body: JSON.stringify({
+                  imageBase64: compB,
+                  imageName: targetCamp.variantBName || "variantB.jpg",
+                  industryType: targetCamp.industryType
+                })
               });
               if (respB.ok) {
                 const dataB = await respB.json();
@@ -331,7 +336,7 @@ export default function App() {
             if (!variantBPrediction) {
               const mode = targetCamp.comparisonMode || "original_vs_correction";
               const bName = targetCamp.variantBName || (mode === "original_vs_correction" ? "Diseño B (Corregido)" : "Diseño B (Opción 2)");
-              const baseData = generateClientSimulatedData(bName, targetCamp.category);
+              const baseData = generateClientSimulatedData(bName, targetCamp.category, targetCamp.variantBImageUrl, targetCamp.industryType);
               
               if (mode === "original_vs_correction") {
                 // Optimized correction stats

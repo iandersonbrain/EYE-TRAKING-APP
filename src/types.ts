@@ -51,6 +51,9 @@ export interface PredictiveData {
   firstFixationTimeMs?: number;
   totalScanTimeSec?: number;
   maxDwellZone?: { name: string; weight: number; dwellTimeMs?: number };
+  detectedHeadline?: string;
+  detectedTextInImage?: string;
+  industryType?: string; // e.g. "Bebidas & Alimentos", "Retail & FMCG", "Automotriz"
   spellingAudit?: SpellingAudit;
   reportText: {
     summary: string;
@@ -105,6 +108,7 @@ export interface Campaign {
   status: 'pending' | 'analyzing' | 'ready';
   areasOfInterest: AreaOfInterest[];
   category?: 'landing' | 'keyvisual' | 'fintech' | 'supermarket' | 'packaging' | 'video' | 'presentation' | 'tiktok' | 'banner' | 'poster' | 'ooh';
+  industryType?: string; // e.g., "Retail & FMCG", "Bebidas & Alimentos", "Automotriz", etc.
   videoUrl?: string;
   predictive?: PredictiveData;
   realGaze?: RealGazeSession;

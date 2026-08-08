@@ -47,7 +47,7 @@ interface PredictiveViewProps {
 type AspectRatio = "original" | "1:1" | "9:16" | "16:9" | "4:5";
 
 export default function PredictiveView({ campaign }: PredictiveViewProps) {
-  const [viewMode, setViewMode] = useState<"heatmap" | "gazepath" | "both">("heatmap");
+  const [viewMode, setViewMode] = useState<"heatmap" | "gazepath" | "both">("both");
   const [activeVariant, setActiveVariant] = useState<"sideBySide" | "A" | "B">("sideBySide");
   const [hoveredPoint, setHoveredPoint] = useState<string | null>(null);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
@@ -87,6 +87,13 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
     if (!predictive) return;
     setIsExporting(true);
     
+    // Temporarily switch to "both" mode to guarantee Heatmap + GazePath are rendered for canvas capture
+    const previousViewMode = viewMode;
+    setViewMode("both");
+    
+    // Allow React state & SVG overlay bounds to re-render in the DOM
+    await new Promise((resolve) => setTimeout(resolve, 350));
+
     let imgData: string | null = null;
     let canvasWidth = 800;
     let canvasHeight = 500;
@@ -94,7 +101,7 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
     try {
       const element = document.getElementById("predictive-visual-canvas");
       if (element) {
-        // Try to capture the live visual canvas
+        // Capture the live visual canvas (including both Heatmap and Gaze Path overlays)
         const canvas = await html2canvas(element, {
           useCORS: true,
           allowTaint: true,
@@ -107,6 +114,8 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
       }
     } catch (error) {
       console.warn("Could not capture canvas via html2canvas (likely CORS restrictions on third-party images). Falling back to pure text PDF structure.", error);
+    } finally {
+      setViewMode(previousViewMode);
     }
 
     try {
@@ -172,10 +181,21 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
         doc.setLineWidth(0.5);
         doc.rect(mapX - 0.5, mapY - 0.5, mapWidth + 1, mapHeight + 1, "S");
         
-        // Draw image
+        // Draw image with both Heatmap and Gaze Path
         doc.addImage(imgData, "PNG", mapX, mapY, mapWidth, mapHeight);
+
+        // Explanatory Overlay Legend Banner
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(15, 23, 42); // slate-900
+        doc.text(
+          "Mapa de Calor (Atención Térmica)  +  Ruta de la Mirada (Sacadas 1 -> 2 -> 3)",
+          pageWidth / 2,
+          mapY + mapHeight + 5,
+          { align: "center" }
+        );
       } else {
-        // Draw a gorgeous technical fallback visualization box when html2canvas is restricted!
+        // Draw a technical fallback visualization box showing both Heatmap and Gaze Path
         doc.setFillColor(30, 41, 59); // slate-800
         doc.roundedRect(mapX, mapY, mapWidth, mapHeight, 3, 3, "F");
         
@@ -185,28 +205,51 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
         
         doc.setTextColor(241, 245, 249);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text("Mapa de Calor Predictivo", mapX + mapWidth / 2, mapY + 25, { align: "center" });
+        doc.setFontSize(13);
+        doc.text("Mapa de Calor + Ruta de la Mirada Predictiva", mapX + mapWidth / 2, mapY + 20, { align: "center" });
         
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(148, 163, 184);
-        doc.text("Distribución de Foco Visual Estimado", mapX + mapWidth / 2, mapY + 33, { align: "center" });
-        
-        // Draw a schematic representation of the focus areas
-        let currentDotY = mapY + 45;
         doc.setFontSize(8.5);
-        predictive.focusAreas.slice(0, 4).forEach((area, i) => {
+        doc.setTextColor(148, 163, 184);
+        doc.text("Distribución de Foco Visual Estimado y Movimiento Sacádico", mapX + mapWidth / 2, mapY + 28, { align: "center" });
+        
+        // Draw schematic for Heatmap focus areas and Gaze Path sequence
+        let currentDotY = mapY + 40;
+        doc.setFontSize(8);
+        
+        // Heatmap Focus Points
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(244, 63, 94); // rose-500
+        doc.text("• Mapa de Calor (Puntos de Fijación):", mapX + 15, currentDotY);
+        currentDotY += 7;
+
+        predictive.focusAreas.slice(0, 3).forEach((area, i) => {
           doc.setFillColor(245, 158, 11); // amber-500
-          doc.circle(mapX + 25, currentDotY, 2, "F");
+          doc.circle(mapX + 20, currentDotY, 1.8, "F");
+          doc.setFont("helvetica", "normal");
           doc.setTextColor(226, 232, 240);
-          doc.text(`AOI ${i + 1}: ${area.name} (Atención: ${area.weight}%)`, mapX + 32, currentDotY + 1);
-          currentDotY += 12;
+          doc.text(`AOI ${i + 1}: ${area.name} (Atención: ${area.weight}%)`, mapX + 26, currentDotY + 1);
+          currentDotY += 6.5;
         });
 
-        doc.setFontSize(8);
+        // Gaze Path Route Sequence
+        currentDotY += 2;
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(245, 158, 11); // amber-500
+        doc.text("• Ruta de la Mirada (Secuencia Ocular):", mapX + 15, currentDotY);
+        currentDotY += 7;
+
+        if (predictive.gazePath && predictive.gazePath.length > 0) {
+          const sequenceStr = predictive.gazePath.slice(0, 4).map((p, idx) => `(${idx + 1}) ${p.label || 'Punto ' + (idx + 1)}`).join(" -> ");
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(226, 232, 240);
+          const seqLines = doc.splitTextToSize(`Ruta: ${sequenceStr}`, mapWidth - 30);
+          doc.text(seqLines, mapX + 20, currentDotY);
+        }
+
+        doc.setFontSize(7.5);
         doc.setTextColor(148, 163, 184);
-        doc.text("* Captura visual deshabilitada en vista previa por políticas de privacidad del navegador (CORS).", mapX + mapWidth / 2, mapY + mapHeight - 10, { align: "center" });
+        doc.text("* Captura visual deshabilitada en vista previa por políticas de privacidad del navegador (CORS).", mapX + mapWidth / 2, mapY + mapHeight - 8, { align: "center" });
       }
 
       // KPI Gauge blocks under image (4 balanced cards)
@@ -1038,19 +1081,41 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
 
         {/* Optimizations */}
         <div className="bg-amber-50/50 p-6 rounded-2xl border border-amber-100 shadow-sm">
-          <h4 className="text-sm font-bold text-amber-900 uppercase tracking-wider mb-3 flex items-center">
-            <Lightbulb className="w-4 h-4 text-amber-600 mr-1.5" />
-            Recomendaciones de Optimización de Tasa de Conversión (CRO)
+          <h4 className="text-sm font-bold text-amber-900 uppercase tracking-wider mb-3 flex items-center justify-between">
+            <div className="flex items-center">
+              <Lightbulb className="w-4 h-4 text-amber-600 mr-1.5" />
+              <span>Recomendaciones de Optimización de Tasa de Conversión (CRO)</span>
+            </div>
+            <span className="text-[10px] font-mono font-bold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full">
+              Escala & Jerarquía
+            </span>
           </h4>
           <ul className="space-y-2.5">
-            {predictive.reportText.recommendations.map((rec, idx) => (
-              <li key={`rec-${idx}`} className="text-slate-800 text-xs leading-relaxed flex items-start">
-                <span className="bg-amber-200 text-amber-900 w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] mr-2 shrink-0">
-                  {idx + 1}
-                </span>
-                <span>{rec}</span>
-              </li>
-            ))}
+            {predictive.reportText.recommendations.map((rec, idx) => {
+              const parts = rec.split(/(\+\d+%\b|\b\d+%\b)/g);
+              return (
+                <li key={`rec-${idx}`} className="text-slate-800 text-xs leading-relaxed flex items-start bg-white p-2.5 rounded-xl border border-amber-200/60 shadow-2xs">
+                  <span className="bg-amber-500 text-white w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] mr-2.5 shrink-0 mt-0.5 shadow-xs">
+                    {idx + 1}
+                  </span>
+                  <span className="font-medium text-slate-800">
+                    {parts.map((part, pIdx) => {
+                      if (/^(\+\d+%\b|\b\d+%\b)$/.test(part)) {
+                        return (
+                          <span
+                            key={pIdx}
+                            className="inline-flex items-center px-1.5 py-0.5 mx-1 rounded-md bg-indigo-600 text-white font-mono font-black text-[11px] shadow-xs"
+                          >
+                            {part}
+                          </span>
+                        );
+                      }
+                      return part;
+                    })}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
