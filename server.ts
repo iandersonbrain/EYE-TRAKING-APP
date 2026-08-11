@@ -93,7 +93,7 @@ app.get("/api/status", (req, res) => {
     geminiActive: apiKeyExists,
     securityShield: "Active (Input Sanitization + Base64 RFC Guard + Rate Limit Simulation)",
     message: apiKeyExists 
-      ? "IA Predictiva Activa (Gemini 3.5 Flash)" 
+      ? "IA Predictiva Activa (Gemini 2.5 Flash)" 
       : "Modo Simulado (Configure GEMINI_API_KEY para análisis por IA real)"
   });
 });
@@ -592,7 +592,7 @@ app.post("/api/strategic-benchmark", async (req, res) => {
       return res.json(generateSimulatedStrategicBenchmark(resolvedBrand, resolvedIndustry, resolvedLine, resolvedCountries, resolvedObjective, resolvedDimensions));
     }
 
-    console.log(`[Strategic Benchmark] Querying Gemini 3.5 Flash for '${resolvedBrand}' (${resolvedIndustry}) in ${resolvedCountries.join(", ")}...`);
+    console.log(`[Strategic Benchmark] Querying Gemini 2.5 Flash for '${resolvedBrand}' (${resolvedIndustry}) in ${resolvedCountries.join(", ")}...`);
 
     const systemInstruction = `Eres un experto internacional en inteligencia de mercados, investigación de competencia, econometría de medios y auditoría de marcas.
 Tu misión es investigar y generar un BENCHMARK COMPETITIVO PROFUNDO, REALISTA Y CONTEXTUALIZADO para la marca "${resolvedBrand}" en la categoría/industria "${resolvedIndustry}" (línea de productos: "${resolvedLine}") en los siguientes países/mercados objetivo: ${resolvedCountries.join(", ")}.
