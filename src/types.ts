@@ -62,6 +62,15 @@ export interface PredictiveData {
    * detection). See PredictiveView.tsx's PDF footer.
    */
   dataSource?: "gemini" | "local-heuristic";
+  /**
+   * When dataSource is "local-heuristic" because a real Gemini call was
+   * attempted and failed (rate limit, network error, malformed response,
+   * etc.) rather than because Gemini was never configured, this carries
+   * the actual error message so the UI/PDF can say *why* instead of a
+   * generic "Gemini wasn't active" that would be misleading when it
+   * actually is configured.
+   */
+  geminiErrorReason?: string;
   spellingAudit?: SpellingAudit;
   reportText: {
     summary: string;

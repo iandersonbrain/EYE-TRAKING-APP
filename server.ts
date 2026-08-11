@@ -185,93 +185,21 @@ app.post("/api/predictive-analysis", async (req, res) => {
 
     console.log(`Analyzing image ${cleanImageName} using Gemini 2.5 Flash...`);
 
-    const systemInstruction = `Eres un sistema experto de clase mundial en neuro-diseño, psicología cognitiva de la visión, OCR y análisis de atención visual (eye-tracking predictivo).
-Tu tarea es analizar minuciosamente la imagen de diseño/keyvisual adjunta y predecir el comportamiento anatómico real de atención visual durante los primeros 5-10 segundos de exposición.
+    const systemInstruction = `Eres un sistema experto en neuro-diseño, psicología cognitiva de la visión, OCR y eye-tracking predictivo. Analiza la imagen adjunta y predice la atención visual real durante los primeros 5-10 segundos de exposición.
 
-INSTRUCCIONES CLAVE DE DETECCIÓN VISUAL REALISTA Y ANATÓMICA:
-1. DETECCIÓN BASADA EXCLUSIVAMENTE EN LO QUE EXISTE EN LA IMAGEN:
-   - Escanea e identifica ÚNICAMENTE los elementos visuales reales que están presentes en la imagen.
-   - NO asumas ni exijas que exista un empaque, botella o caja si la gráfica es conceptual, publicitaria de servicios, B2B, tecnológica, institucional, o sin empaque físico.
-   - Si NO hay un empaque en la imagen, NO crees puntos de calor para empaques ni recomiendes agregar o agrandar empaques.
+REGLAS DE DETECCIÓN (aplican a focusAreas, gazePath y recommendations):
+1. Detecta ÚNICAMENTE elementos que existen realmente en la imagen. Nunca asumas ni recomiendes empaque/botella/caja si la pieza es conceptual, de servicios, B2B, tecnológica o institucional sin empaque físico.
+2. Elementos a buscar (solo si existen, con coordenadas x,y en % 0-100 del lienzo):
+   - Rostros/ojos/manos de personas (la mirada humana va ahí de forma instintiva)
+   - Titular y demás texto (transcribe todo vía OCR)
+   - Sujeto visual central / producto / ilustración dominante
+   - Logotipo/isotipo de marca
+   - Botón o enlace de Call to Action (CTA)
+3. gazePath: 2 a 5 fijaciones secuenciales, tantas como elementos reales relevantes existan (no fuerces 5 si la pieza es simple). Orden natural: titular -> slogan/sujeto -> sujeto/rostro -> logo -> CTA. Cada punto debe compartir coordenadas exactas con su elemento correspondiente en focusAreas.
+4. reportText.recommendations: cada una debe incluir un porcentaje numérico exacto de mejora (+10% a +30%) y referirse solo a elementos que existen en la imagen.
+5. Revisa ortografía/gramática de todo el texto visible (Español e Inglés) para spellingAudit.
 
-2. RECONOCIMIENTO DE ELEMENTOS Y PATRONES DE FIJACIÓN HUMANA:
-   - Rostros / Ojos / Manos de Personas: La mirada humana se dirige de manera instintiva e inmediata hacia rostros, ojos y manos. Si hay modelos o personas, detecta sus coordenadas exactas (x, y en % del lienzo de 0 a 100).
-   - Titulares & Textos (OCR): Extrae las frases e identifica las coordenadas de su centro visual.
-   - Sujeto Visual Central / Ilustración / Producto: Detecta la gráfica o elemento visual dominante si existe.
-   - Logotipo / Isotipo de Marca: Detecta la marca y su posición.
-   - Call to Action (CTA) / Botón / Enlace: Detecta el elemento de conversión.
-
-3. RUTA VISUAL REAL Y ADAPTADA A LA COMPLEJIDAD (gazePath):
-   - La ruta visual NO debe ser artificialmente compleja si la pieza es simple.
-   - Genera entre 2 y 5 fijaciones secuenciales en "gazePath" que se ajusten estricta y fielmente a la cantidad de elementos clave reales del diseño.
-   - Si el diseño es sencillo (ej: solo un Titular y un Logotipo), genera solo las fijaciones correspondientes a esos elementos reales.
-   - Cada punto de fijación en "gazePath" DEBE coincidir en coordenadas (x, y) con el elemento correspondiente en "focusAreas".
-
-4. RECOMENDACIONES DE OPTIMIZACIÓN (CRO) CON PORCENTAJES NUMÉRICOS EXACTOS:
-   - Cada recomendación en "reportText.recommendations" DEBE ESPECIFICAR UN PORCENTAJE NUMÉRICO EXACTO DE AUMENTO DE TAMAÑO O DESTACADO (ejemplo: +10%, +15%, +20%, +25%, +30%).
-   - Recomienda mejoras ÚNICAMENTE sobre elementos que REALMENTE EXISTEN en la imagen.
-   - Ejemplo para Titular: "Incrementar la escala de la tipografía del titular principal en un +15% para dominancia visual sobre el fondo."
-   - Ejemplo para Sujeto / Rostro: "Aumentar el encuadre del rostro / sujeto principal en un +20% para captar mayor atención foveal."
-   - Ejemplo para Botón CTA: "Aumentar el área del botón Call to Action en un +20% e incrementar su contraste para acelerar la conversión."
-   - Ejemplo para Logotipo: "Ampliar la presencia del logotipo en un +15% para aumentar la recordación de marca."
-
-5. REVISIÓN ORTOGRÁFICA Y GRAMATICAL OBLIGATORIA (Español / Inglés):
-   - Inspecciona todo el texto visible para verificar la correcta ortografía, acentuación y gramática en Español e Inglés.
-
-Debes devolver obligatoriamente un JSON que coincida exactamente con este esquema:
-{
-  "detectedHeadline": "string" (Titular principal detectado en la imagen),
-  "detectedTextInImage": "string" (Transcripción de todo el texto visible en la imagen),
-  "clarityScore": number (Puntuación de claridad global de 0 a 100),
-  "cognitiveLoad": number (Carga cognitiva estimada de 0 a 100),
-  "focusAreas": [
-    {
-      "x": number, "y": number, "radius": number, "weight": number, "name": "string"
-    }
-  ],
-  "gazePath": [
-    {
-      "id": "string", "x": number, "y": number, "sequence": number, "durationMs": number, "label": "string"
-    }
-  ],
-  "spellingAudit": {
-    "hasErrors": boolean,
-    "detectedLanguage": "string",
-    "statusText": "string",
-    "issues": [
-      {
-        "foundText": "string",
-        "correctedText": "string",
-        "language": "string",
-        "explanation": "string"
-      }
-    ]
-  },
-  "reportText": {
-    "summary": "string",
-    "strengths": ["string"],
-    "weaknesses": ["string"],
-    "recommendations": ["string"]
-  }
-}
-
-CALIBRACIÓN ULTRA-PRECISA DE COORDENADAS PARA LA RUTA VISUAL (gazePath) Y ZONAS DE CALOR (focusAreas):
-1. RECONOCIMIENTO ESPACIAL DE TEXTO E ELEMENTOS (OCR & VISUAL):
-   - Escanea la imagen e incluye zonas de calor para TODOS los elementos presentes que REALMENTE EXISTAN:
-     * Titular principal (detectedHeadline) -> Coordenadas exactas X, Y.
-     * Subtítulo / Slogan / Bajada (si existe) -> Coordenadas exactas X, Y.
-     * Sujeto Visual Central / Rostro / Ilustración / Producto (si existe) -> Coordenadas exactas X, Y.
-     * Rostros / Ojos / Manos de Personas (si existen) -> Coordenadas exactas X, Y.
-     * Logotipo o Isotipo de la marca (si existe) -> Coordenadas exactas X, Y.
-     * Botón Call to Action (CTA) / Enlace (si existe) -> Coordenadas exactas X, Y.
-2. CONSTRUCCIÓN DE LA RUTA VISUAL (gazePath):
-   - Secuencia 1 (sequence=1): Titular Principal.
-   - Secuencia 2 (sequence=2): Subtítulo o Slogan (o Sujeto Principal si no hay slogan).
-   - Secuencia 3 (sequence=3): Sujeto Visual Central / Rostro de Modelo / Ilustración Keyvisual.
-   - Secuencia 4 (sequence=4): Logotipo de Marca.
-   - Secuencia 5 (sequence=5): Botón CTA o pie de página.
-3. COINCIDENCIA CON EL MAPA DE CALOR (focusAreas):
-   - Cada objeto en "focusAreas" DEBE corresponder a un elemento visual real detectado en la gráfica para que la cobertura del mapa térmico sea fiel al diseño.`;
+Responde exclusivamente con el JSON que cumpla el schema de la respuesta (ya definido por la API); no lo repitas ni lo describas en tu respuesta de texto.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -372,11 +300,18 @@ CALIBRACIÓN ULTRA-PRECISA DE COORDENADAS PARA LA RUTA VISUAL (gazePath) Y ZONAS
 
   } catch (error: any) {
     console.error("Error en predictive-analysis:", error);
+    const fallbackData: any = await generateSimulatedData(cleanImageName, rawBase64, industryType);
+    // Gemini WAS configured and a real call was attempted here (this is
+    // the outer catch, not the "ai is null" early-return above) — so
+    // tell the truth about *why* it fell back instead of implying it was
+    // never active. Common real causes: free-tier rate limit (429),
+    // transient network error, or a malformed/blocked response.
+    fallbackData.geminiErrorReason = error?.message || "Error desconocido al llamar a Gemini";
     res.status(500).json({
       error: "Error al procesar el análisis predictivo con IA",
       details: error.message || "Error desconocido",
       fallback: true,
-      simulatedData: await generateSimulatedData(cleanImageName, rawBase64, industryType)
+      simulatedData: fallbackData
     });
   }
 });
@@ -406,54 +341,15 @@ app.post("/api/logo-analysis", async (req, res) => {
 
     console.log(`Analizando logotipo '${resolvedName}' (Categoría: ${resolvedCategory}) con Gemini 2.5 Flash...`);
 
-    const systemInstruction = `Eres un experto de nivel de agencia de branding global y especialista en diseño de logotipos y sistemas de identidad visual corporativa. Tu tarea es analizar el diseño del logotipo proporcionado en la imagen, teniendo en cuenta la categoría del proyecto ("${resolvedCategory}") y el nombre de la marca ("${resolvedName}").
+    const systemInstruction = `Eres un experto de nivel de agencia de branding global especializado en diseño de logotipos e identidad visual corporativa. Analiza el logotipo adjunto considerando la categoría ("${resolvedCategory}") y la marca ("${resolvedName}").
 
-Debes realizar una auditoría técnica profunda, emitiendo puntuaciones, detectando riesgos formales y de legibilidad, y proponiendo mejoras accionables y precisas.
+Realiza una auditoría técnica profunda: puntuaciones, riesgos formales/de legibilidad, y mejoras accionables. Responde con el JSON del schema de la respuesta (ya definido por la API), teniendo en cuenta:
+- risks.type: usa exactamente "Misinterpretation" | "Confusion" | "Scale Legibility" | "Color Contrast" | "Other".
+- improvements.area: sé específico y técnico (ej: "Espaciado Tipográfico", "Grosor de Filetes", "Simplificación Cromática", "Alineación de Isotipo").
+- brandPalette: colores reales detectados en el logo, con hex exacto y evaluación de contraste.
+- monochromeReview y faviconReview: evalúa honestamente si el logo sobrevive a blanco/negro puro y a tamaños de ícono muy pequeños (16-32px).
 
-Debes devolver obligatoriamente un JSON que coincida exactamente con este esquema:
-{
-  "score": {
-    "overall": number (Puntuación general del logotipo de 0 a 100),
-    "clarity": number (Puntuación de claridad conceptual y minimalismo, de 0 a 100),
-    "originality": number (Puntuación de distinción y originalidad en su sector, de 0 a 100),
-    "legibility": number (Puntuación de legibilidad del nombre de marca, de 0 a 100),
-    "adaptability": number (Puntuación de versatilidad en diferentes medios, de 0 a 100)
-  },
-  "risks": [
-    {
-      "severity": "high" | "medium" | "low" (Gravedad del riesgo),
-      "type": "Misinterpretation" | "Confusion" | "Scale Legibility" | "Color Contrast" | "Other" (Tipo de riesgo técnico),
-      "title": "string" (Título corto en español explicando el riesgo detectado),
-      "description": "string" (Explicación técnica detallada del riesgo detectado y por qué ocurre, ej. si se confunde con otra marca, si se malinterpreta la silueta o pierde legibilidad al achicarse)
-    }
-  ],
-  "improvements": [
-    {
-      "priority": "high" | "medium" | "low" (Prioridad de la recomendación),
-      "area": "string" (Área técnica, ej: 'Espaciado Tipográfico', 'Grosor de Filetes', 'Simplificación Cromática', 'Alineación de Isotipo'),
-      "description": "string" (Recomendación detallada de diseño en español, explicando qué cambiar y qué valor técnico aportará)
-    }
-  ],
-  "brandPalette": [
-    {
-      "name": "string" (Nombre descriptivo del color, ej: 'Azul Eléctrico', 'Verde Orgánico', 'Blanco Puro'),
-      "hex": "string" (Código hexadecimal del color, ej: '#0f172a'),
-      "usageRecommendation": "string" (Consejo técnico de uso y contraste de este color en el ecosistema de marca),
-      "contrastOk": boolean (true si el color tiene un buen nivel de contraste para usarse sobre blanco/oscuro)
-    }
-  ],
-  "monochromeReview": {
-    "whiteVersionOk": boolean (true si el diseño se puede convertir a blanco puro sobre fondo oscuro sin perder la silueta),
-    "blackVersionOk": boolean (true si el diseño responde bien a negro puro sobre fondo claro),
-    "feedback": "string" (Revisión técnica de la respuesta monocromática del logotipo y consejos de adaptación)
-  },
-  "faviconReview": {
-    "score": number (Puntuación de adaptabilidad a favicon/iconos micro, de 0 a 100),
-    "elementsToSimplify": "string" (Sugerencia concreta de qué elementos retirar o simplificar para usar el logotipo como favicon o icono de aplicación de 16x16px o 32x32px)
-  }
-}
-
-Sé sumamente honesto, objetivo y técnico. No elogies por cortesía; si el logotipo tiene problemas de escala, trazos demasiado delgados, baja legibilidad de tipografía secundaria, o colores que no contrastan bien, indícalo de forma clara y ofrece soluciones de diseñador senior de identidad visual.`;
+Sé sumamente honesto, objetivo y técnico. No elogies por cortesía; si hay problemas de escala, trazos muy delgados, baja legibilidad, o colores sin buen contraste, indícalo con claridad y ofrece soluciones de diseñador senior.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -616,42 +512,7 @@ REGLAS CRÍTICAS DE INVESTIGACIÓN Y COMPETIDORES REALES:
 3. PROFUNDIDAD EN LAS DIMENSIONES SELECCIONADAS (${resolvedDimensions.join(", ")}):
    - Cada dimensión analizada debe incluir hallazgos de mercado específicos, analizando precios reales, canales de distribución locales reales (ej. Supermercados, Farmatodo, licitaciones clínicas, ecommerce), mensajes clave de la competencia y comportamiento del consumidor local en ${resolvedCountries.join(", ")}.
 
-Debes devolver obligatoriamente un JSON estructurado con el siguiente formato estricto:
-{
-  "competitors": [
-    {
-      "name": "string" (Nombre real de la marca o competidor),
-      "isTargetBrand": boolean (true solo para "${resolvedBrand}"),
-      "marketSharePercent": number (ej: 32.5),
-      "shareOfVoicePercent": number (ej: 28.4),
-      "shareOfSpendPercent": number (ej: 30.1),
-      "estimatedMonthlyAdSpend": "string" (ej: "$28,500 USD (Est. Econométrica)"),
-      "exposureEffectivenessScore": number (0 a 100),
-      "socialFollowers": "string" (ej: "285K"),
-      "socialEngagementRate": "string" (ej: "4.2%"),
-      "topStrength": "string" (Fortaleza real de mercado),
-      "keyVulnerability": "string" (Vulnerabilidad real de mercado)
-    }
-  ],
-  "marketShareChart": [
-    { "brand": "string", "share": number, "isTarget": boolean }
-  ],
-  "spendVsExposureChart": [
-    { "brand": "string", "shareOfSpend": number, "shareOfVoice": number, "roiIndex": number }
-  ],
-  "dimensionResults": [
-    {
-      "id": "string",
-      "title": "string",
-      "summary": "string",
-      "keyDataPoints": ["string"],
-      "strategicAction": "string"
-    }
-  ],
-  "blueOceanOpportunities": ["string"],
-  "executiveSummary": "string",
-  "strategicActionPlan": ["string"]
-}`;
+Responde con el JSON del schema de la respuesta (ya definido por la API). Usa cifras con decimales realistas y no repetidas (ej: 32.4%, 23.8%, 16.1%), y en "estimatedMonthlyAdSpend" incluye siempre la metodología (ej: "$18,500 USD (Est. Econométrica - Densidad Medios)").`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",

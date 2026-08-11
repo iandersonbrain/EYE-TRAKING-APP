@@ -418,10 +418,10 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
       if (predictive.dataSource === "gemini") {
         doc.text("Página 2 de 2 | Reporte generado con Inteligencia Artificial Multimodal (Gemini-Vision)", pageWidth / 2, pageHeight - 10, { align: "center" });
       } else {
-        const fallbackLines = doc.splitTextToSize(
-          "Página 2 de 2 | Reporte generado con motor heurístico LOCAL (Itti-Koch-Niebur) — Gemini Vision no estaba activo. No incluye OCR ni detección real de personas/empaques. Verifica GET /api/status.",
-          pageWidth - 30
-        );
+        const fallbackText = predictive.geminiErrorReason
+          ? `Página 2 de 2 | Reporte generado con motor heurístico LOCAL (Itti-Koch-Niebur) — Gemini Vision está activo pero esta petición falló (${predictive.geminiErrorReason}). No incluye OCR ni detección real de personas/empaques.`
+          : "Página 2 de 2 | Reporte generado con motor heurístico LOCAL (Itti-Koch-Niebur) — Gemini Vision no estaba activo. No incluye OCR ni detección real de personas/empaques. Verifica GET /api/status.";
+        const fallbackLines = doc.splitTextToSize(fallbackText, pageWidth - 30);
         doc.text(fallbackLines, pageWidth / 2, pageHeight - 10 - (fallbackLines.length - 1) * 3.5, { align: "center" });
       }
 
@@ -516,9 +516,21 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
         <div className="lg:col-span-12 flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl px-4 py-3">
           <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold">Modo de respaldo local (sin Gemini Vision).</span>{" "}
-            Este análisis usa un motor heurístico de contraste visual (Itti-Koch-Niebur), no lectura de texto ni detección real de personas/empaques.
-            Verifica <code className="bg-amber-100 px-1 rounded">/api/status</code> en tu despliegue — si <code className="bg-amber-100 px-1 rounded">geminiActive</code> es <code className="bg-amber-100 px-1 rounded">false</code>, configura <code className="bg-amber-100 px-1 rounded">GEMINI_API_KEY</code> para un análisis semántico real.
+            {predictive.geminiErrorReason ? (
+              <>
+                <span className="font-bold">Gemini Vision está activo, pero esta petición falló.</span>{" "}
+                Se usó el respaldo local heurístico (Itti-Koch-Niebur) para esta pieza — no lectura de texto ni detección real de personas/empaques.{" "}
+                Motivo reportado por el servidor:{" "}
+                <code className="bg-amber-100 px-1 rounded break-all">{predictive.geminiErrorReason}</code>.{" "}
+                Si el motivo menciona cuota o límite de peticiones, es probablemente el límite gratuito por minuto de Gemini — espera un momento y vuelve a intentarlo.
+              </>
+            ) : (
+              <>
+                <span className="font-bold">Modo de respaldo local (sin Gemini Vision).</span>{" "}
+                Este análisis usa un motor heurístico de contraste visual (Itti-Koch-Niebur), no lectura de texto ni detección real de personas/empaques.
+                Verifica <code className="bg-amber-100 px-1 rounded">/api/status</code> en tu despliegue — si <code className="bg-amber-100 px-1 rounded">geminiActive</code> es <code className="bg-amber-100 px-1 rounded">false</code>, configura <code className="bg-amber-100 px-1 rounded">GEMINI_API_KEY</code> para un análisis semántico real.
+              </>
+            )}
           </div>
         </div>
       )}
