@@ -54,6 +54,14 @@ export interface PredictiveData {
   detectedHeadline?: string;
   detectedTextInImage?: string;
   industryType?: string; // e.g. "Bebidas & Alimentos", "Retail & FMCG", "Automotriz"
+  /**
+   * Where this analysis actually came from. Set explicitly by the code
+   * path that produced it — never inferred from text — so the UI/PDF
+   * export can honestly label real Gemini Vision output vs. the local
+   * heuristic fallback (which does NOT do real OCR, face, or packaging
+   * detection). See PredictiveView.tsx's PDF footer.
+   */
+  dataSource?: "gemini" | "local-heuristic";
   spellingAudit?: SpellingAudit;
   reportText: {
     summary: string;

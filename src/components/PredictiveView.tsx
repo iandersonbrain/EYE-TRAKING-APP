@@ -34,7 +34,8 @@ import {
   Languages,
   SpellCheck,
   Clock,
-  Zap
+  Zap,
+  ShieldAlert
 } from "lucide-react";
 import { motion } from "motion/react";
 import { jsPDF } from "jspdf";
@@ -408,11 +409,21 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
         listY += (lines.length * 4.2);
       });
 
-      // Footer Page 2
+      // Footer Page 2 — honestly reflects where this analysis actually
+      // came from (real Gemini Vision vs. the local heuristic fallback),
+      // instead of always claiming "Gemini-Vision" regardless of source.
       doc.setTextColor(148, 163, 184);
       doc.setFont("helvetica", "italic");
       doc.setFontSize(8);
-      doc.text("Página 2 de 2 | Reporte generado con Inteligencia Artificial Multimodal (Gemini-Vision)", pageWidth / 2, pageHeight - 10, { align: "center" });
+      if (predictive.dataSource === "gemini") {
+        doc.text("Página 2 de 2 | Reporte generado con Inteligencia Artificial Multimodal (Gemini-Vision)", pageWidth / 2, pageHeight - 10, { align: "center" });
+      } else {
+        const fallbackLines = doc.splitTextToSize(
+          "Página 2 de 2 | Reporte generado con motor heurístico LOCAL (Itti-Koch-Niebur) — Gemini Vision no estaba activo. No incluye OCR ni detección real de personas/empaques. Verifica GET /api/status.",
+          pageWidth - 30
+        );
+        doc.text(fallbackLines, pageWidth / 2, pageHeight - 10 - (fallbackLines.length - 1) * 3.5, { align: "center" });
+      }
 
       // Save the generated document
       doc.save(`OculiMind_Reporte_${campaign.name.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`);
@@ -498,6 +509,19 @@ export default function PredictiveView({ campaign }: PredictiveViewProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
+      {/* Honest, always-visible indicator of where this analysis actually
+          came from — real Gemini Vision vs. the local heuristic fallback
+          (which cannot do OCR, face detection, or packaging recognition). */}
+      {predictive && predictive.dataSource !== "gemini" && (
+        <div className="lg:col-span-12 flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl px-4 py-3">
+          <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <div>
+            <span className="font-bold">Modo de respaldo local (sin Gemini Vision).</span>{" "}
+            Este análisis usa un motor heurístico de contraste visual (Itti-Koch-Niebur), no lectura de texto ni detección real de personas/empaques.
+            Verifica <code className="bg-amber-100 px-1 rounded">/api/status</code> en tu despliegue — si <code className="bg-amber-100 px-1 rounded">geminiActive</code> es <code className="bg-amber-100 px-1 rounded">false</code>, configura <code className="bg-amber-100 px-1 rounded">GEMINI_API_KEY</code> para un análisis semántico real.
+          </div>
+        </div>
+      )}
       {/* Slide Selector Carousel for Presentations */}
       {isPresentation && (
         <div className="lg:col-span-12 flex flex-col space-y-3 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">

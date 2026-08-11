@@ -222,7 +222,7 @@ export default function App() {
 
             const slidePredictive = (response.ok && data && !data.error) 
               ? data 
-              : ((data && data.simulatedData) ? data.simulatedData : generateClientSimulatedData(slide.name, "presentation"));
+              : ((data && data.simulatedData) ? data.simulatedData : await generateClientSimulatedData(slide.name, "presentation", compressedSlideImg));
             
             updatedSlides.push({
               ...slide,
@@ -231,7 +231,7 @@ export default function App() {
           } catch {
             updatedSlides.push({
               ...slide,
-              predictive: generateClientSimulatedData(slide.name, "presentation")
+              predictive: await generateClientSimulatedData(slide.name, "presentation", slide.imageUrl)
             });
           } finally {
             clearInterval(subInterval);
@@ -307,7 +307,7 @@ export default function App() {
           } else {
             predictiveData = (data && data.simulatedData) 
               ? data.simulatedData 
-              : generateClientSimulatedData(targetCamp.name, targetCamp.category, targetCamp.imageUrl, targetCamp.industryType);
+              : await generateClientSimulatedData(targetCamp.name, targetCamp.category, targetCamp.imageUrl, targetCamp.industryType);
           }
 
           // If Campaign has a second design variant B (A/B comparison mode)
@@ -336,7 +336,7 @@ export default function App() {
             if (!variantBPrediction) {
               const mode = targetCamp.comparisonMode || "original_vs_correction";
               const bName = targetCamp.variantBName || (mode === "original_vs_correction" ? "Diseño B (Corregido)" : "Diseño B (Opción 2)");
-              const baseData = generateClientSimulatedData(bName, targetCamp.category, targetCamp.variantBImageUrl, targetCamp.industryType);
+              const baseData = await generateClientSimulatedData(bName, targetCamp.category, targetCamp.variantBImageUrl, targetCamp.industryType);
               
               if (mode === "original_vs_correction") {
                 // Optimized correction stats
@@ -392,13 +392,13 @@ export default function App() {
           setAnalysisProgressPercent(100);
           console.warn("Conexión API fallida o alojamiento estático Netlify detectado. Generando análisis predictivo local:", err);
           
-          const fallbackData = generateClientSimulatedData(targetCamp.name, targetCamp.category);
+          const fallbackData = await generateClientSimulatedData(targetCamp.name, targetCamp.category, targetCamp.imageUrl, targetCamp.industryType);
           
           let variantBPrediction = targetCamp.variantBPredictive || null;
           if (targetCamp.variantBImageUrl && !variantBPrediction) {
             const mode = targetCamp.comparisonMode || "original_vs_correction";
             const bName = targetCamp.variantBName || "Diseño B";
-            const baseDataB = generateClientSimulatedData(bName, targetCamp.category);
+            const baseDataB = await generateClientSimulatedData(bName, targetCamp.category, targetCamp.variantBImageUrl, targetCamp.industryType);
             if (mode === "original_vs_correction") {
               variantBPrediction = {
                 ...baseDataB,

@@ -103,13 +103,13 @@ export default function Dashboard360({ campaign }: Dashboard360Props) {
       if (response.ok && data && !data.error) {
         setVariantBPredictive(data);
       } else {
-        const sim = generateClientSimulatedData(nameStr, campaign.category);
+        const sim = await generateClientSimulatedData(nameStr, campaign.category, compressedImg, campaign.industryType);
         sim.clarityScore = Math.min(98, Math.max(88, (predictive?.clarityScore || 75) + 14));
         sim.cognitiveLoad = Math.max(15, (predictive?.cognitiveLoad || 50) - 22);
         setVariantBPredictive(sim);
       }
     } catch {
-      const sim = generateClientSimulatedData(nameStr, campaign.category);
+      const sim = await generateClientSimulatedData(nameStr, campaign.category, rawImg, campaign.industryType);
       sim.clarityScore = Math.min(98, Math.max(88, (predictive?.clarityScore || 75) + 14));
       sim.cognitiveLoad = Math.max(15, (predictive?.cognitiveLoad || 50) - 22);
       setVariantBPredictive(sim);

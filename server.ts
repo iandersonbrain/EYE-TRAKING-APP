@@ -8,11 +8,12 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
+import { analyzeImagePixelsNode, ImagePixelFeaturesNode } from "./server-lib/imagePixelAnalysisNode";
 
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // Set high limit for base64 uploads and large media files
 app.use(express.json({ limit: "100mb" }));
@@ -179,7 +180,7 @@ app.post("/api/predictive-analysis", async (req, res) => {
     // If Gemini is not configured, generate a high-quality simulated eye-tracking report
     if (!ai) {
       console.log("Generating high-quality simulated report for:", cleanImageName);
-      return res.json(generateSimulatedData(cleanImageName, rawBase64, industryType));
+      return res.json(await generateSimulatedData(cleanImageName, rawBase64, industryType));
     }
 
     console.log(`Analyzing image ${cleanImageName} using Gemini 2.5 Flash...`);
@@ -366,6 +367,7 @@ CALIBRACIÓN ULTRA-PRECISA DE COORDENADAS PARA LA RUTA VISUAL (gazePath) Y ZONAS
     }
 
     const parsedData = JSON.parse(resultText.trim());
+    parsedData.dataSource = "gemini";
     return res.json(parsedData);
 
   } catch (error: any) {
@@ -374,7 +376,7 @@ CALIBRACIÓN ULTRA-PRECISA DE COORDENADAS PARA LA RUTA VISUAL (gazePath) Y ZONAS
       error: "Error al procesar el análisis predictivo con IA",
       details: error.message || "Error desconocido",
       fallback: true,
-      simulatedData: generateSimulatedData(cleanImageName, rawBase64, industryType)
+      simulatedData: await generateSimulatedData(cleanImageName, rawBase64, industryType)
     });
   }
 });
@@ -1127,11 +1129,18 @@ function computeStringHash(str: string): number {
   return Math.abs(hash ^ len);
 }
 
-function generateSimulatedData(name: string, imageBase64OrUrl?: string, industryType?: string) {
-  const seedStr = `${name}_${industryType || ''}_${imageBase64OrUrl || ''}`;
+async function generateSimulatedData(name: string, imageBase64OrUrl?: string, industryType?: string) {
+  const seedStr = `${name}_${industryType || ''}_${imageBase64OrUrl ? imageBase64OrUrl.length : ''}`;
   const seed = computeStringHash(seedStr);
   const cleanName = name.replace(/\.[^/.]+$/, "").trim() || "Keyvisual / Poster";
   const nameLower = cleanName.toLowerCase();
+
+  // Real, measured pixel features for THIS specific image (null if no
+  // image was provided or it couldn't be decoded) — this is what makes
+  // results image-specific instead of only name/category-specific. See
+  // server-lib/imagePixelAnalysisNode.ts for the real Itti-Koch-Niebur
+  // saliency computation this pulls from.
+  const pixels: ImagePixelFeaturesNode | null = await analyzeImagePixelsNode(imageBase64OrUrl);
 
   // Deduce or normalize Industry Type
   let detectedIndustry = industryType || "Consumo Masivo & Retail";
@@ -1151,13 +1160,34 @@ function generateSimulatedData(name: string, imageBase64OrUrl?: string, industry
     }
   }
 
-  // Dynamic Scores & Biometric Timing
-  const clarityScore = Math.min(98, Math.max(72, 80 + (seed % 19)));
-  const cognitiveLoad = Math.min(58, Math.max(16, 20 + ((seed >> 2) % 35)));
+  // ============================================================
+  // SCORES: grounded in real measured pixel/saliency features when
+  // available, instead of purely a name/category hash.
+  // ============================================================
+  let clarityScore: number;
+  let cognitiveLoad: number;
+
+  if (pixels) {
+    const topWeight = (pixels.topSaliencyPeak?.weight ?? 0) / 100;
+    const secondWeight = (pixels.saliency.peaks[1]?.weight ?? 0) / 100;
+    const prominence = Math.min(1, Math.max(-0.2, topWeight - secondWeight * 0.6));
+    clarityScore = Math.round(Math.min(98, Math.max(58, 70 + prominence * 26 + topWeight * 6 + (seed % 4))));
+
+    const peakCrowding = Math.min(1, Math.max(0, (pixels.saliency.peaks.length - 2) / 6));
+    cognitiveLoad = Math.round(Math.min(80, Math.max(12,
+      14 + pixels.globalEdgeDensity * 34 + pixels.colorfulness * 16 + peakCrowding * 16 + (seed % 4)
+    )));
+  } else {
+    clarityScore = Math.min(98, Math.max(72, 80 + (seed % 19)));
+    cognitiveLoad = Math.min(58, Math.max(16, 20 + ((seed >> 2) % 35)));
+  }
+
   const firstFixationTimeMs = Math.min(260, Math.max(120, 130 + ((seed >> 4) % 120)));
   const totalScanTimeSec = parseFloat((2.1 + ((seed >> 6) % 18) / 10).toFixed(1));
 
-  // Precision Headline & Slogan Extraction
+  // Headline / slogan text: this is an ESTIMATE derived from the campaign
+  // name and detected industry, NOT real OCR. Real text extraction
+  // requires Gemini Vision to actually be reachable (check /api/status).
   let detectedHeadline = cleanName;
   let detectedSlogan = "Innovación y Máximo Rendimiento Garantizado";
 
@@ -1188,16 +1218,38 @@ function generateSimulatedData(name: string, imageBase64OrUrl?: string, industry
     detectedSlogan = slogansList[seed % slogansList.length];
   }
 
-  const detectedTextInImage = `[OCR Verificado]: Línea 1 (Titular): "${detectedHeadline}" | Línea 2 (Slogan): "${detectedSlogan}" | Marca & Call To Action identificados.`;
+  const detectedTextInImage = `[Estimación heurística — NO es OCR real]: Titular probable: "${detectedHeadline}" | Slogan probable: "${detectedSlogan}". Este resultado viene del modo de respaldo local (sin Gemini Vision activo). Verifica GET /api/status: si "geminiActive" es false, configura GEMINI_API_KEY para obtener lectura de texto, detección de rostros/personas y de empaques real.`;
 
-  // Continuous Dynamic Layout Calculation
+  // ============================================================
+  // LAYOUT: hotspot coordinates. When real pixel/saliency features are
+  // available, hotspots are anchored to regions actually measured in
+  // THIS image (the strongest real saliency peaks). Otherwise falls back
+  // to one of a handful of seeded layout templates.
+  // ============================================================
   let headlineX: number, headlineY: number;
   let sloganX: number, sloganY: number;
   let heroX: number, heroY: number;
   let logoX: number, logoY: number;
   let ctaX: number, ctaY: number;
 
-  if (nameLower.includes("nike") || nameLower.includes("billboard") || nameLower.includes("valla")) {
+  if (pixels) {
+    const heroPeak = pixels.topSaliencyPeak;
+    heroX = heroPeak ? heroPeak.xPct : pixels.strongestBottomCell.centerXPct;
+    heroY = heroPeak ? heroPeak.yPct : 50;
+
+    const headlinePeak = pixels.topAreaSaliencyPeak;
+    headlineX = headlinePeak ? headlinePeak.xPct : pixels.brightestTopCell.centerXPct;
+    headlineY = headlinePeak ? Math.min(32, Math.max(8, headlinePeak.yPct)) : Math.min(30, Math.max(8, pixels.brightestTopCell.centerYPct - 8));
+    sloganX = headlineX;
+    sloganY = headlineY + 12;
+
+    logoX = pixels.quietCorner.centerXPct;
+    logoY = Math.min(92, Math.max(8, pixels.quietCorner.centerYPct));
+
+    const ctaPeak = pixels.bottomAreaSaliencyPeak;
+    ctaX = ctaPeak ? ctaPeak.xPct : pixels.strongestBottomCell.centerXPct;
+    ctaY = ctaPeak ? Math.min(95, Math.max(70, ctaPeak.yPct)) : Math.min(94, Math.max(70, pixels.strongestBottomCell.centerYPct + 6));
+  } else if (nameLower.includes("nike") || nameLower.includes("billboard") || nameLower.includes("valla")) {
     headlineX = 28; headlineY = 22;
     sloganX = 28; sloganY = 35;
     heroX = 52; heroY = 42;
@@ -1258,14 +1310,18 @@ function generateSimulatedData(name: string, imageBase64OrUrl?: string, industry
     }
   }
 
-  const secondaryX = Math.min(88, Math.max(12, 15 + ((seed * 13) % 70)));
-  const secondaryY = Math.min(85, Math.max(15, 20 + ((seed * 17) % 60)));
+  const secondaryX = pixels
+    ? Math.min(88, Math.max(12, 100 - heroX))
+    : Math.min(88, Math.max(12, 15 + ((seed * 13) % 70)));
+  const secondaryY = pixels
+    ? Math.min(85, Math.max(15, heroY + 15))
+    : Math.min(85, Math.max(15, 20 + ((seed * 17) % 60)));
 
   const isPackaging = nameLower.includes("empaque") || nameLower.includes("packaging") || nameLower.includes("botella") || nameLower.includes("caja") || nameLower.includes("lata") || nameLower.includes("envase") || nameLower.includes("pack");
 
   const heroName = isPackaging 
     ? `Empaque de Producto Hero / Envase (${cleanName})` 
-    : `Sujeto Visual Central / Rostro o Ilustración Keyvisual (${cleanName})`;
+    : `Sujeto Visual Central / Zona de Mayor Contraste (${cleanName})`;
 
   const focusAreas = [
     { 
@@ -1343,7 +1399,7 @@ function generateSimulatedData(name: string, imageBase64OrUrl?: string, industry
       y: logoY,
       sequence: 4,
       durationMs: Math.min(480, Math.max(280, 320 + ((seed >> 4) % 100))),
-      label: `Fijación 4: Reconocimiento del Logotipo en la esquina de anclaje (${logoX}%, ${logoY}%)`
+      label: `Fijación 4: Reconocimiento del Logotipo en la esquina de anclaje (${Math.round(logoX)}%, ${Math.round(logoY)}%)`
     },
     {
       id: `gp5-${seed}`,
@@ -1351,39 +1407,43 @@ function generateSimulatedData(name: string, imageBase64OrUrl?: string, industry
       y: ctaY,
       sequence: 5,
       durationMs: Math.min(520, Math.max(300, 380 + ((seed >> 5) % 120))),
-      label: `Fijación 5: Decisión en el Botón Call-To-Action (${ctaX}%, ${ctaY}%)`
+      label: `Fijación 5: Decisión en el Botón Call-To-Action (${Math.round(ctaX)}%, ${Math.round(ctaY)}%)`
     }
   ];
 
   const spellingAudit = {
     hasErrors: false,
     detectedLanguage: "Español e Inglés",
-    statusText: `Ortografía y gramática verificadas en '${cleanName}': 100% Correcto sin faltas`,
+    statusText: `Ortografía estimada en '${cleanName}': sin faltas detectadas (verificación heurística, no OCR real).`,
     issues: []
   };
 
+  const analysisBasis = pixels
+    ? `un mapa de saliencia visual real (algoritmo Itti-Koch-Niebur, contraste multiescala de color/intensidad/orientación) calculado sobre los píxeles de esta imagen`
+    : `heurística basada en nombre/categoría (no se pudo leer la imagen)`;
+
   const strengths = [
-    `Excelente precisión de ruta ocular: la mirada aterriza directamente en la Línea de Titular ("${detectedHeadline}") a los ${firstFixationTimeMs}ms.`,
-    `Transición foveal fluida desde el titular hacia el ${heroName} en (${heroX}%, ${heroY}%), logrando un 90% de atención en la composición principal.`,
-    `Ubicación limpia del logotipo en (${logoX}%, ${logoY}%), permitiendo una alta asociación de marca en la industria de ${detectedIndustry}.`
+    `Ruta ocular calculada con ${analysisBasis}: la mirada aterriza en la Línea de Titular ("${detectedHeadline}") a los ${firstFixationTimeMs}ms.`,
+    `Transición foveal desde el titular hacia el ${heroName} en (${Math.round(heroX)}%, ${Math.round(heroY)}%).`,
+    `Ubicación del logotipo en (${Math.round(logoX)}%, ${Math.round(logoY)}%), en zona de bajo ruido visual, favoreciendo la asociación de marca en ${detectedIndustry}.`
   ];
 
   const weaknesses = [
     isPackaging 
-      ? `El empaque de producto en (${heroX}%, ${heroY}%) compite visualmente con el fondo.`
-      : `El sujeto visual o gráfica central en (${heroX}%, ${heroY}%) podría ganar un +20% de contraste.`,
-    `El botón Call to Action en (${ctaX}%, ${ctaY}%) registra una fijación tardía.`,
-    `Carga cognitiva de ${cognitiveLoad}%: adecuada para ${detectedIndustry}.`
+      ? `El empaque de producto en (${Math.round(heroX)}%, ${Math.round(heroY)}%) podría competir visualmente con el fondo.`
+      : `El sujeto visual o gráfica central en (${Math.round(heroX)}%, ${Math.round(heroY)}%) podría ganar contraste con respecto al fondo.`,
+    `El botón Call to Action en (${Math.round(ctaX)}%, ${Math.round(ctaY)}%) podría registrar una fijación tardía según su escala actual.`,
+    `Carga cognitiva estimada de ${cognitiveLoad}%: ${cognitiveLoad > 45 ? "considera simplificar elementos secundarios." : "en un rango razonable para " + detectedIndustry + "."}`
   ];
 
   const recommendations = [
     isPackaging 
-      ? "Aumentar el tamaño del empaque del producto en un +25% para asegurar su detección foveal inmediata."
-      : "Aumentar la escala e iluminación del sujeto o gráfica central Keyvisual en un +20% para elevar la fijación foveal.",
-    `Incrementar la escala de la tipografía del titular principal ("${detectedHeadline}") en un +15% para afianzar la dominancia visual.`,
-    "Aumentar el área del botón Call to Action (CTA) en un +20% e incrementar el contraste de color.",
-    "Ampliar la presencia del logotipo de marca en un +15% en la esquina de anclaje.",
-    "Si la pieza incluye modelos humanos, aumentar el encuadre de rostros o manos en un +15%."
+      ? "Evaluar un aumento de tamaño del empaque del producto para asegurar su detección foveal inmediata en los primeros 500ms."
+      : "Evaluar mayor escala o iluminación del sujeto/gráfica central para elevar la fijación foveal.",
+    `Revisar la escala de la tipografía del titular principal ("${detectedHeadline}") para afianzar la dominancia visual.`,
+    "Revisar el área y contraste del botón Call to Action (CTA) para acelerar la tasa de conversión.",
+    "Verificar la presencia y anclaje del logotipo de marca en la esquina de menor ruido visual.",
+    "Si la pieza incluye modelos humanos, orientar la mirada de rostros/manos hacia el mensaje clave o CTA."
   ];
 
   return {
@@ -1394,6 +1454,7 @@ function generateSimulatedData(name: string, imageBase64OrUrl?: string, industry
     detectedHeadline,
     detectedTextInImage,
     industryType: detectedIndustry,
+    dataSource: "local-heuristic",
     focusAreas,
     gazePath,
     spellingAudit,
@@ -1403,7 +1464,7 @@ function generateSimulatedData(name: string, imageBase64OrUrl?: string, industry
       dwellTimeMs: gazePath[0].durationMs
     },
     reportText: {
-      summary: `Análisis de Neuro-Diseño Calibrado (Industria: ${detectedIndustry}). La calibración espacial confirma un recorrido foveal optimizado. La mirada inicia en la Línea de Titular ("${detectedHeadline}"), se desplaza naturalmente hacia el elemento visual hero y la marca. Se logra un Clarity Score de ${clarityScore}% y carga cognitiva de ${cognitiveLoad}%.`,
+      summary: `[Análisis local heurístico | Industria: ${detectedIndustry}] Calculado con ${analysisBasis}. Clarity Score: ${clarityScore}% · Carga cognitiva: ${cognitiveLoad}%. NOTA: para lectura de texto real, detección de personas y de empaques, activa Gemini Vision (revisa GET /api/status → geminiActive debe ser true).`,
       strengths,
       weaknesses,
       recommendations
