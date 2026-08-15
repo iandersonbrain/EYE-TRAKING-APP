@@ -93,7 +93,7 @@ app.get("/api/status", (req, res) => {
     geminiActive: apiKeyExists,
     securityShield: "Active (Input Sanitization + Base64 RFC Guard + Rate Limit Simulation)",
     message: apiKeyExists 
-      ? "IA Predictiva Activa (Gemini 2.5 Flash)" 
+      ? "IA Predictiva Activa (Gemini 3.5 Flash)" 
       : "Modo Simulado (Configure GEMINI_API_KEY para análisis por IA real)"
   });
 });
@@ -183,7 +183,7 @@ app.post("/api/predictive-analysis", async (req, res) => {
       return res.json(await generateSimulatedData(cleanImageName, rawBase64, industryType));
     }
 
-    console.log(`Analyzing image ${cleanImageName} using Gemini 2.5 Flash...`);
+    console.log(`Analyzing image ${cleanImageName} using Gemini 3.5 Flash...`);
 
     const systemInstruction = `Eres un sistema experto en neuro-diseño, psicología cognitiva de la visión, OCR y eye-tracking predictivo. Analiza la imagen adjunta y predice la atención visual real durante los primeros 5-10 segundos de exposición.
 
@@ -202,7 +202,7 @@ REGLAS DE DETECCIÓN (aplican a focusAreas, gazePath y recommendations):
 Responde exclusivamente con el JSON que cumpla el schema de la respuesta (ya definido por la API); no lo repitas ni lo describas en tu respuesta de texto.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.5-flash",
       contents: [
         {
           inlineData: {
@@ -339,7 +339,7 @@ app.post("/api/logo-analysis", async (req, res) => {
       return res.json(generateSimulatedLogoData(resolvedName, resolvedCategory));
     }
 
-    console.log(`Analizando logotipo '${resolvedName}' (Categoría: ${resolvedCategory}) con Gemini 2.5 Flash...`);
+    console.log(`Analizando logotipo '${resolvedName}' (Categoría: ${resolvedCategory}) con Gemini 3.5 Flash...`);
 
     const systemInstruction = `Eres un experto de nivel de agencia de branding global especializado en diseño de logotipos e identidad visual corporativa. Analiza el logotipo adjunto considerando la categoría ("${resolvedCategory}") y la marca ("${resolvedName}").
 
@@ -352,7 +352,7 @@ Realiza una auditoría técnica profunda: puntuaciones, riesgos formales/de legi
 Sé sumamente honesto, objetivo y técnico. No elogies por cortesía; si hay problemas de escala, trazos muy delgados, baja legibilidad, o colores sin buen contraste, indícalo con claridad y ofrece soluciones de diseñador senior.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.5-flash",
       contents: [
         {
           inlineData: {
@@ -488,7 +488,7 @@ app.post("/api/strategic-benchmark", async (req, res) => {
       return res.json(generateSimulatedStrategicBenchmark(resolvedBrand, resolvedIndustry, resolvedLine, resolvedCountries, resolvedObjective, resolvedDimensions));
     }
 
-    console.log(`[Strategic Benchmark] Querying Gemini 2.5 Flash for '${resolvedBrand}' (${resolvedIndustry}) in ${resolvedCountries.join(", ")}...`);
+    console.log(`[Strategic Benchmark] Querying Gemini 3.5 Flash for '${resolvedBrand}' (${resolvedIndustry}) in ${resolvedCountries.join(", ")}...`);
 
     const systemInstruction = `Eres un experto internacional en inteligencia de mercados, investigación de competencia, econometría de medios y auditoría de marcas.
 Tu misión es investigar y generar un BENCHMARK COMPETITIVO PROFUNDO, REALISTA Y CONTEXTUALIZADO para la marca "${resolvedBrand}" en la categoría/industria "${resolvedIndustry}" (línea de productos: "${resolvedLine}") en los siguientes países/mercados objetivo: ${resolvedCountries.join(", ")}.
@@ -515,7 +515,7 @@ REGLAS CRÍTICAS DE INVESTIGACIÓN Y COMPETIDORES REALES:
 Responde con el JSON del schema de la respuesta (ya definido por la API). Usa cifras con decimales realistas y no repetidas (ej: 32.4%, 23.8%, 16.1%), y en "estimatedMonthlyAdSpend" incluye siempre la metodología (ej: "$18,500 USD (Est. Econométrica - Densidad Medios)").`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.5-flash",
       contents: [
         `Ejecuta el benchmark competitivo de investigación real y estimación econométrica para la marca '${resolvedBrand}' (${resolvedLine}) en la industria '${resolvedIndustry}' en los países: ${resolvedCountries.join(", ")}.`
       ],
