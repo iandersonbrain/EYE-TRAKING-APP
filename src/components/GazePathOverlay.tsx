@@ -105,8 +105,9 @@ export default function GazePathOverlay({
           <circle
             cx={point.px}
             cy={point.py}
-            r={hoveredPoint === point.id ? 18 : 14}
+            r={hoveredPoint === point.id ? 17 : 13}
             fill="#1e293b"
+            fillOpacity={hoveredPoint === point.id ? 0.9 : 0.55}
             stroke="#f59e0b"
             strokeWidth="3"
             className="transition-all duration-200 cursor-pointer pointer-events-auto"
@@ -119,6 +120,9 @@ export default function GazePathOverlay({
             textAnchor="middle"
             dy=".3em"
             fill="#f59e0b"
+            stroke="#1e293b"
+            strokeWidth="3"
+            paintOrder="stroke"
             fontSize={hoveredPoint === point.id ? "12" : "10"}
             fontWeight="bold"
             className="pointer-events-none select-none"

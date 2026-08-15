@@ -221,18 +221,18 @@ Responde exclusivamente con el JSON que cumpla el schema de la respuesta (ya def
           properties: {
             detectedHeadline: { type: Type.STRING },
             detectedTextInImage: { type: Type.STRING },
-            clarityScore: { type: Type.NUMBER },
-            cognitiveLoad: { type: Type.NUMBER },
+            clarityScore: { type: Type.NUMBER, description: "Puntuación de claridad visual, de 0 a 100 (no 0 a 1)." },
+            cognitiveLoad: { type: Type.NUMBER, description: "Puntuación de carga cognitiva, de 0 a 100 (no 0 a 1). Menor es mejor." },
             focusAreas: {
               type: Type.ARRAY,
               items: {
                 type: Type.OBJECT,
                 required: ["x", "y", "radius", "weight", "name"],
                 properties: {
-                  x: { type: Type.NUMBER },
-                  y: { type: Type.NUMBER },
-                  radius: { type: Type.NUMBER },
-                  weight: { type: Type.NUMBER },
+                  x: { type: Type.NUMBER, description: "Posición horizontal en % del ancho de la imagen, de 0 a 100." },
+                  y: { type: Type.NUMBER, description: "Posición vertical en % del alto de la imagen, de 0 a 100." },
+                  radius: { type: Type.NUMBER, description: "Radio del área de fijación en % del lienzo, típicamente entre 8 y 25." },
+                  weight: { type: Type.NUMBER, description: "Peso/intensidad de atención de 0 a 100 (porcentaje, NO un decimal de 0 a 1). Ej: 92, no 0.92." },
                   name: { type: Type.STRING },
                 },
               },
@@ -244,10 +244,10 @@ Responde exclusivamente con el JSON que cumpla el schema de la respuesta (ya def
                 required: ["id", "x", "y", "sequence", "durationMs", "label"],
                 properties: {
                   id: { type: Type.STRING },
-                  x: { type: Type.NUMBER },
-                  y: { type: Type.NUMBER },
-                  sequence: { type: Type.NUMBER },
-                  durationMs: { type: Type.NUMBER },
+                  x: { type: Type.NUMBER, description: "Posición horizontal en % del ancho de la imagen, de 0 a 100." },
+                  y: { type: Type.NUMBER, description: "Posición vertical en % del alto de la imagen, de 0 a 100." },
+                  sequence: { type: Type.NUMBER, description: "Orden de la fijación: 1, 2, 3..." },
+                  durationMs: { type: Type.NUMBER, description: "Duración estimada de la fijación en milisegundos, típicamente entre 150 y 700." },
                   label: { type: Type.STRING },
                 },
               },
@@ -296,6 +296,20 @@ Responde exclusivamente con el JSON que cumpla el schema de la respuesta (ya def
 
     const parsedData = JSON.parse(resultText.trim());
     parsedData.dataSource = "gemini";
+
+    // Defensive normalization: the schema instructs Gemini to use a
+    // 0-100 percentage scale for these fields, but LLMs occasionally
+    // still return a 0-1 fraction instead (e.g. 0.9 meaning "90%"). If a
+    // value looks like a stray fraction (0 < v <= 1) where a 0-100 value
+    // is expected, scale it up rather than silently displaying "0.9%".
+    const asPercent = (v: unknown): unknown =>
+      typeof v === "number" && v > 0 && v <= 1 ? v * 100 : v;
+    if (typeof parsedData.clarityScore !== "undefined") parsedData.clarityScore = asPercent(parsedData.clarityScore);
+    if (typeof parsedData.cognitiveLoad !== "undefined") parsedData.cognitiveLoad = asPercent(parsedData.cognitiveLoad);
+    if (Array.isArray(parsedData.focusAreas)) {
+      parsedData.focusAreas = parsedData.focusAreas.map((area: any) => ({ ...area, weight: asPercent(area?.weight) }));
+    }
+
     return res.json(parsedData);
 
   } catch (error: any) {
